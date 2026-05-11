@@ -116,6 +116,10 @@
       margin-bottom: 1.05rem;
    }
 
+   .auth-password-wrap {
+      position: relative;
+   }
+
    .auth-label {
       display: block;
       margin-bottom: .45rem;
@@ -144,6 +148,38 @@
 
    .auth-input::placeholder {
       color: rgba(255, 255, 255, .38);
+   }
+
+   .auth-password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .08);
+      color: rgba(255, 255, 255, .85);
+      cursor: pointer;
+      transition: background .2s ease;
+   }
+
+   .auth-password-toggle:hover {
+      background: rgba(255, 255, 255, .14);
+   }
+
+   .auth-password-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
    }
 
    .auth-submit {
@@ -207,14 +243,66 @@
       justify-content: center;
    }
 
-   @media (max-width: 520px) {
+   .auth-wrap .nav-logo img {
+      width: min(350px, 78vw);
+      height: auto;
+   }
+
+   @media (max-width: 991px) {
       #auth-page {
-         padding-top: 105px;
+         padding: 105px 24px 40px;
+      }
+
+      .auth-wrap {
+         max-width: 520px;
       }
 
       .auth-card {
+         padding: 2rem 1.6rem;
+      }
+   }
+
+   @media (max-width: 767px) {
+      #auth-page {
+         align-items: flex-start;
+         padding: 96px 16px 24px;
+         width: 100%;
+      }
+
+      .auth-title {
+         font-size: 2.2rem;
+      }
+
+      .auth-label {
+         font-size: .78rem;
+         letter-spacing: 2px;
+      }
+
+      .auth-subtitle {
+         font-size: 1rem;
+      }
+
+      .auth-input {
+         font-size: 1rem;
+         padding: 1rem 1rem;
+      }
+
+      .btn-gold {
+         width: 100%;
+         padding: 1rem 1rem;
+         font-size: .92rem;
+      }
+   }
+
+   @media (max-width: 576px) {
+      .auth-card {
+         width: 100%;
          border-radius: 20px;
-         padding: 1.7rem 1.2rem;
+         padding: 2rem 1.3rem;
+      }
+
+      .auth-foot {
+         font-size: .95rem;
       }
    }
 </style>
@@ -235,15 +323,28 @@
 
          <form action="{{ url('login/proses') }}" method="POST">
             <div class="auth-field">
-               <label class="auth-label" for="txtusername">Username</label>
-               <input class="auth-input" id="txtusername" type="text" name="txtusername" required
-                  placeholder="Masukkan username">
+               <label class="auth-label" for="txtemail">Email</label>
+               <input class="auth-input" id="txtemail" type="email" name="txtemail" required
+                  placeholder="Masukkan email">
             </div>
 
             <div class="auth-field">
                <label class="auth-label" for="txtpassword">Password</label>
-               <input class="auth-input" id="txtpassword" type="password" name="txtpassword" required
-                  placeholder="Masukkan password">
+               <div class="auth-password-wrap">
+                  <input class="auth-input" id="txtpassword" type="password" name="txtpassword" required
+                     placeholder="Masukkan password">
+                  <button type="button" class="auth-password-toggle" id="togglePassword" aria-label="Tampilkan password">
+                     <svg id="eyeOpen" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                     </svg>
+                     <svg id="eyeClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
+                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.77 21.77 0 0 1 5.06-5.94"></path>
+                        <path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-3.22 4.22"></path>
+                        <path d="M1 1l22 22"></path>
+                     </svg>
+                  </button>
+               </div>
             </div>
 
             <button type="submit" class="btn-gold auth-submit">Masuk Sekarang</button>
@@ -251,7 +352,39 @@
 
          <div class="auth-foot">
             Belum punya akun? <a href="{{ url('registrasi') }}">Daftar</a>
+            lupa password? <a href="{{ url('login/forgot') }}">Reset</a>
          </div>
       </div>
    </div>
+
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   <script>
+      (function () {
+         const passwordInput = document.getElementById('txtpassword');
+         const toggleButton = document.getElementById('togglePassword');
+         const eyeOpen = document.getElementById('eyeOpen');
+         const eyeClosed = document.getElementById('eyeClosed');
+
+         if (!passwordInput || !toggleButton) return;
+
+         toggleButton.addEventListener('click', function () {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            eyeOpen.style.display = isPassword ? 'none' : 'block';
+            eyeClosed.style.display = isPassword ? 'block' : 'none';
+            toggleButton.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
+         });
+      })();
+   </script>
+   {% if session.has('login_error') %}
+   <script>
+      Swal.fire({
+         icon: 'error',
+         title: 'Login Gagal',
+         text: '{{ session.get("login_error") }}',
+         confirmButtonColor: '#c8a84b'
+      });
+   </script>
+   {% do session.remove('login_error') %}
+   {% endif %}
 </section>

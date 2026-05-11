@@ -1,6 +1,6 @@
 <?php
 
-class User extends \Phalcon\Mvc\Model
+class Member extends \Phalcon\Mvc\Model
 {
 
     /**
@@ -12,17 +12,22 @@ class User extends \Phalcon\Mvc\Model
      *
      * @var string
      */
-    public $name;
+    public $no_member;
     /**
      *
      * @var string
      */
-    public $role;
+    public $nama;
     /**
      *
      * @var string
      */
-    public $username;
+    public $no_hp;
+    /**
+     *
+     * @var string
+     */
+    public $email;
     /**
      *
      * @var string
@@ -41,7 +46,7 @@ class User extends \Phalcon\Mvc\Model
     public function initialize()
     {
         $this->setSchema("public");
-        $this->setSource("users");
+        $this->setSource("members");
     }
 
     /**
@@ -52,14 +57,14 @@ class User extends \Phalcon\Mvc\Model
     public function getSource()
     {
         // return 'web_vusers_list';
-        return 'users';
+        return 'members';
     }
 
     /**
      * Allows to query a set of records that match the specified conditions
      *
      * @param mixed $parameters
-     * @return User[]|User|\Phalcon\Mvc\Model\ResultSetInterface
+     * @return Member[]|Member|\Phalcon\Mvc\Model\ResultSetInterface
      */
     public static function find($parameters = null)
     {
@@ -70,7 +75,7 @@ class User extends \Phalcon\Mvc\Model
      * Allows to query the first record that match the specified conditions
      *
      * @param mixed $parameters
-     * @return User|\Phalcon\Mvc\Model\ResultInterface
+     * @return Member|\Phalcon\Mvc\Model\ResultInterface
      */
     public static function findFirst($parameters = null)
     {

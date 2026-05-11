@@ -1,5 +1,4 @@
 <?php
-define('LEVEL', isset($_SESSION['role']) ? $_SESSION['role'] : null);
 
 
 $router->setDefaults(
@@ -75,7 +74,14 @@ $router->add("/login/logout",
     ]
 );
 
-if (isset($_SESSION['username'])) {
+$router->add("/registrasi/proses_registrasi",
+    [
+        "controller" => "login",
+        "action"     => "prosesRegistrasi",
+    ]
+);
+
+if (isset($_SESSION['id'])) {
     // Logged in ...
 
 	$router->add('/:controller',

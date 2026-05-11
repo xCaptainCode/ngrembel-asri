@@ -116,6 +116,10 @@
       margin-bottom: 1.05rem;
    }
 
+   .auth-password-wrap {
+      position: relative;
+   }
+
    .auth-label {
       display: block;
       margin-bottom: .45rem;
@@ -144,6 +148,54 @@
 
    .auth-input::placeholder {
       color: rgba(255, 255, 255, .38);
+   }
+
+   .auth-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image:
+         linear-gradient(45deg, transparent 50%, rgba(232, 204, 122, .95) 50%),
+         linear-gradient(135deg, rgba(232, 204, 122, .95) 50%, transparent 50%);
+      background-position:
+         calc(100% - 18px) calc(50% - 3px),
+         calc(100% - 12px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 42px;
+      color: rgba(255, 255, 255, .88);
+   }
+
+   .auth-select option {
+      background: #163422;
+      color: #f5efe4;
+   }
+
+   .auth-password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .08);
+      color: rgba(255, 255, 255, .85);
+      cursor: pointer;
+   }
+
+   .auth-password-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
    }
 
    .auth-submit {
@@ -194,18 +246,6 @@
       box-shadow: 0 14px 40px rgba(200, 168, 75, .55);
    }
 
-   @media (max-width: 520px) {
-      #auth-page {
-         padding-top: 105px;
-      }
-
-      .auth-card {
-         border-radius: 20px;
-         padding: 1.7rem 1.2rem;
-      }
-   }
-
-   
    .mb-3 {
       margin-bottom: 2rem !important;
    }
@@ -218,43 +258,177 @@
       display: flex;
       justify-content: center;
    }
+
+   .auth-wrap .nav-logo img {
+      width: min(350px, 78vw);
+      height: auto;
+   }
+
+   @media (max-width: 991px) {
+      #auth-page {
+         padding: 105px 24px 40px;
+      }
+
+      .auth-wrap {
+         max-width: 560px;
+      }
+
+      .auth-card {
+         padding: 2rem 1.6rem;
+      }
+   }
+
+   @media (max-width: 767px) {
+      #auth-page {
+         align-items: flex-start;
+         padding: 96px 16px 24px;
+      }
+
+      .auth-title {
+         font-size: 2.2rem;
+      }
+
+      .auth-label {
+         font-size: .78rem;
+         letter-spacing: 2px;
+      }
+
+      .auth-subtitle {
+         font-size: 1rem;
+      }
+
+      .auth-input {
+         font-size: 1rem;
+         padding: 1rem 1rem;
+      }
+
+      .btn-gold {
+         width: 100%;
+         padding: 1rem 1rem;
+         font-size: .92rem;
+      }
+   }
 </style>
 
 <section id="auth-page">
-    <div class="auth-wrap r">
-         <div class="justify-center mb-3">
+   <div class="auth-wrap r">
+      <div class="justify-center mb-3">
          <a href="{{ url('') }}" class="nav-logo text-center">
             <img src="{{ url('images/logo-white.png') }}" alt="Logo Ngrembel Asri" width="350px">
          </a>
       </div>
-        <div class="auth-card">
-            <div class="auth-head">
-                <h2 class="auth-title">Daftar <em>Member</em></h2>
-                <p class="auth-subtitle">Bergabunglah dengan keluarga Ngrembel Asri</p>
+      <div class="auth-card">
+         <div class="auth-head">
+            <h2 class="auth-title">Daftar <em>Member</em></h2>
+            <p class="auth-subtitle">Bergabunglah dengan keluarga Ngrembel Asri</p>
+            <p class="auth-subtitle">Untuk mendapatkan promo menarik</p>
+         </div>
+
+         <form action="{{ url('registrasi/proses_registrasi') }}" method="POST">
+            <div class="auth-field">
+               <label class="auth-label" for="name">Nama Lengkap</label>
+               <input class="auth-input" id="name" type="text" name="name" required placeholder="Masukkan nama lengkap">
             </div>
 
-            <form action="{{ url('registrasi/proses') }}" method="POST">
-                <div class="auth-field">
-                    <label class="auth-label" for="name">Nama Lengkap</label>
-                    <input class="auth-input" id="name" type="text" name="name" required placeholder="Masukkan nama lengkap">
-                </div>
-
-                <div class="auth-field">
-                    <label class="auth-label" for="username">Username</label>
-                    <input class="auth-input" id="username" type="text" name="username" required placeholder="Masukkan username">
-                </div>
-
-                <div class="auth-field">
-                    <label class="auth-label" for="password">Password</label>
-                    <input class="auth-input" id="password" type="password" name="password" required placeholder="Masukkan password">
-                </div>
-
-                <button type="submit" class="btn-gold auth-submit">Daftar Sekarang</button>
-            </form>
-
-            <div class="auth-foot">
-                Sudah punya akun? <a href="{{ url('login') }}">Masuk</a>
+            <div class="auth-field">
+               <label class="auth-label" for="no_hp">No Telepon</label>
+               <input class="auth-input" id="no_hp" type="numeric" name="no_hp" required
+                  placeholder="Masukkan no telepon">
             </div>
-        </div>
-    </div>
+
+            <div class="auth-field">
+               <label class="auth-label" for="email">Email</label>
+               <input class="auth-input" id="email" type="email" name="email" required placeholder="Masukkan email">
+            </div>
+
+            <!-- tgl lahir -->
+            <div class="auth-field">
+               <label class="auth-label" for="tgl_lahir">Tanggal Lahir</label>
+               <input class="auth-input" id="tgl_lahir" type="date" name="tgl_lahir" required>
+            </div>
+
+            <!-- gender -->
+            <div class="auth-field">
+               <label class="auth-label" for="gender">Jenis Kelamin</label>
+               <select class="auth-input auth-select" id="gender" name="gender" required>
+                  <option value="">Pilih Jenis Kelamin</option>
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+               </select>
+            </div>
+
+            <!-- kota -->
+            <div class="auth-field">
+               <label class="auth-label" for="kota">Kota</label>
+               <input class="auth-input" id="kota" type="text" name="kota" required placeholder="Masukkan kota">
+            </div>
+
+            <!-- alamat -->
+            <div class="auth-field">
+               <label class="auth-label" for="alamat">Alamat</label>
+               <input class="auth-input" id="alamat" type="text" name="alamat" required placeholder="Masukkan alamat">
+            </div>
+
+            <!-- password -->
+            <div class="auth-field">
+               <label class="auth-label" for="password">Password</label>
+               <div class="auth-password-wrap">
+                  <input class="auth-input" id="password" type="password" name="password" required
+                     placeholder="Masukkan password">
+                  <button type="button" class="auth-password-toggle" id="togglePassword"
+                     aria-label="Tampilkan password">
+                     <svg id="eyeOpen" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                     </svg>
+                     <svg id="eyeClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
+                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.77 21.77 0 0 1 5.06-5.94">
+                        </path>
+                        <path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-3.22 4.22"></path>
+                        <path d="M1 1l22 22"></path>
+                     </svg>
+                  </button>
+               </div>
+            </div>
+
+            <button type="submit" class="btn-gold auth-submit">Daftar Sekarang</button>
+         </form>
+
+         <div class="auth-foot">
+            Sudah punya akun? <a href="{{ url('login') }}">Masuk</a>
+         </div>
+      </div>
+   </div>
 </section>
+
+<script>
+   (function () {
+      const passwordInput = document.getElementById('password');
+      const toggleButton = document.getElementById('togglePassword');
+      const eyeOpen = document.getElementById('eyeOpen');
+      const eyeClosed = document.getElementById('eyeClosed');
+
+      if (!passwordInput || !toggleButton) return;
+
+      toggleButton.addEventListener('click', function () {
+         const isPassword = passwordInput.getAttribute('type') === 'password';
+         passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+         eyeOpen.style.display = isPassword ? 'none' : 'block';
+         eyeClosed.style.display = isPassword ? 'block' : 'none';
+         toggleButton.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
+      });
+   })();
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if session.has('login_error') %}
+<script>
+   Swal.fire({
+      icon: 'error',
+      title: 'Login Gagal',
+      text: '{{ session.get("login_error") }}',
+      confirmButtonColor: '#c8a84b'
+   });
+</script>
+{% do session.remove('login_error') %}
+{% endif %}
