@@ -6,7 +6,7 @@
 
 <section id="wahana" style="padding: 2rem 5% 8rem;">
     <div class="bento">
-        <div class="bento-card r" style="transition-delay:0s">
+        <div class="bento-card big r" style="transition-delay:0s">
             <img class="bento-img" src="{{ url("images/wahana/paintball.jpg") }}" alt="Paintball" />
             <div class="bento-overlay"></div>
             <div class="bento-body">
