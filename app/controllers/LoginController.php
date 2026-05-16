@@ -1,6 +1,7 @@
 <?php
 
 use Phalcon\Mvc\View;
+use Member;
 
 class LoginController extends \Phalcon\Mvc\Controller {
 

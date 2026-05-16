@@ -122,12 +122,75 @@
       transition: opacity .3s;
    }
 
-   .nav-menu {
-      display: flex;
-      gap: 2.4rem;
-      list-style: none;
-      align-items: center;
-   }
+.nav-menu {
+   display: flex;
+   gap: 2.4rem;
+   list-style: none;
+   align-items: center;
+}
+
+.nav-item-dropdown {
+   position: relative;
+   display: flex;
+   align-items: center;
+   gap: .35rem;
+}
+
+.nav-sub-toggle {
+   background: transparent;
+   border: none;
+   color: rgba(255, 255, 255, .65);
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   padding: .1rem;
+   transition: color .25s, transform .25s;
+}
+
+.nav-sub-toggle:hover {
+   color: #fff;
+}
+
+.nav-submenu {
+   position: absolute;
+   top: calc(100% + 12px);
+   left: 0;
+   min-width: 200px;
+   list-style: none;
+   margin: 0;
+   padding: .45rem;
+   display: none;
+   flex-direction: column;
+   gap: .2rem;
+   background: rgba(13, 36, 22, .96);
+   border: 1px solid rgba(200, 168, 75, .2);
+   border-radius: 10px;
+   box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+   z-index: 1200;
+}
+
+.nav-submenu a {
+   display: block;
+   padding: .55rem .65rem;
+   border-radius: 8px;
+   font-size: .72rem;
+   letter-spacing: 1.5px;
+}
+
+.nav-submenu a:hover {
+   background: rgba(200, 168, 75, .14);
+}
+
+.nav-item-dropdown:hover .nav-submenu,
+.nav-item-dropdown:focus-within .nav-submenu,
+.nav-item-dropdown.open .nav-submenu {
+   display: flex;
+}
+
+.nav-item-dropdown.open .nav-sub-toggle svg {
+   transform: rotate(180deg);
+}
 
    .nav-menu a {
       font-size: .72rem;
@@ -182,20 +245,185 @@
    .nav-toggle {
       display: none;
       flex-direction: column;
-      gap: 6px;
-      cursor: pointer;
+      gap: .35rem;
       z-index: 1000;
-      padding: 5px;
+      padding: .7rem;
    }
 
    .nav-toggle span {
       display: block;
-      width: 28px;
-      height: 2px;
-      background: var(--gold2);
       transition: .3s var(--ease-out);
-      border-radius: 2px;
    }
+
+   /* ── PROFILE DROPDOWN ── */
+.profile-wrap {
+   position: relative;
+}
+
+.profile-btn {
+   display: flex !important;
+   align-items: center;
+   gap: .5rem;
+   padding: .42rem .9rem .42rem .5rem !important;
+}
+
+.profile-avatar {
+   width: 28px;
+   height: 28px;
+   border-radius: 50%;
+   background: linear-gradient(135deg, var(--mid), var(--sage));
+   border: 1.5px solid rgba(200, 168, 75, .5);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: .72rem;
+   font-weight: 700;
+   color: var(--gold2);
+   flex-shrink: 0;
+}
+
+.profile-chevron {
+   transition: transform .3s var(--ease-out);
+   opacity: .75;
+}
+
+.profile-wrap:has(.nav-profile-menu.show) .profile-chevron {
+   transform: rotate(180deg);
+}
+
+/* dropdown card */
+.nav-profile-menu {
+   position: absolute;
+   top: calc(100% + 12px);
+   right: 0;
+   z-index: 1200;
+   display: none;
+   flex-direction: column !important;
+   padding: .6rem !important;
+   min-width: 210px !important;
+   gap: 0 !important;
+   background: rgba(13, 36, 22, .96);
+   border: 1px solid rgba(200, 168, 75, .2);
+   border-radius: 12px;
+   box-shadow: 0 16px 40px rgba(0, 0, 0, .35);
+   backdrop-filter: blur(10px);
+}
+
+.nav-profile-menu.show {
+   display: flex;
+}
+
+.profile-wrap:hover .nav-profile-menu,
+.profile-wrap:focus-within .nav-profile-menu {
+   display: flex;
+}
+
+/* profile header block */
+.profile-header {
+   display: flex;
+   align-items: center;
+   gap: .75rem;
+   padding: .5rem .4rem .6rem;
+}
+
+.profile-avatar-lg {
+   width: 40px;
+   height: 40px;
+   border-radius: 50%;
+   background: linear-gradient(135deg, var(--mid), var(--sage));
+   border: 2px solid rgba(200, 168, 75, .4);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 1rem;
+   font-weight: 700;
+   color: var(--gold2);
+   flex-shrink: 0;
+}
+
+.profile-info {
+   display: flex;
+   flex-direction: column;
+   gap: .15rem;
+}
+
+.profile-name {
+   font-size: .82rem;
+   font-weight: 600;
+   color: var(--gold2) !important;
+   letter-spacing: .3px;
+   pointer-events: none;
+}
+
+.profile-badge {
+   font-size: .62rem;
+   letter-spacing: 2px;
+   text-transform: uppercase;
+   color: var(--mint);
+   opacity: .7;
+}
+
+/* divider */
+.profile-divider {
+   height: 1px;
+   background: rgba(200, 168, 75, .15);
+   margin: .3rem 0;
+}
+
+/* menu items */
+.profile-item {
+   display: flex !important;
+   align-items: center;
+   gap: .65rem;
+   padding: .58rem .7rem !important;
+   border-radius: 8px;
+   font-size: .78rem !important;
+   letter-spacing: .5px !important;
+   color: rgba(255,255,255,.8) !important;
+   transition: background .2s, color .2s !important;
+   width: 100%;
+}
+
+.profile-item:hover {
+   background: rgba(200, 168, 75, .14) !important;
+   color: #fff !important;
+}
+
+.profile-icon {
+   width: 26px;
+   height: 26px;
+   border-radius: 7px;
+   background: rgba(255,255,255,.06);
+   border: 1px solid rgba(255,255,255,.08);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+   transition: background .2s, border-color .2s;
+}
+
+.profile-item:hover .profile-icon {
+   background: rgba(200, 168, 75, .2);
+   border-color: rgba(200, 168, 75, .3);
+}
+
+.profile-logout {
+   color: rgba(255, 120, 120, .8) !important;
+}
+
+.profile-logout:hover {
+   background: rgba(255, 80, 80, .12) !important;
+   color: #ff8a8a !important;
+}
+
+.profile-logout .profile-icon {
+   color: rgba(255, 120, 120, .8);
+}
+
+.profile-logout:hover .profile-icon {
+   background: rgba(255, 80, 80, .18);
+   border-color: rgba(255, 80, 80, .25);
+}
 
    /* ═══════════════════════════════════════════
    HERO SLIDESHOW
@@ -1581,7 +1809,18 @@
          display: flex;
       }
 
-      .nav-menu {
+   .nav-profile-menu {
+      position: static;
+      top: auto;
+      right: auto;
+      width: 100%;
+      margin-top: .7rem;
+      box-shadow: none;
+      border-color: rgba(200, 168, 75, .22);
+      background: rgba(13, 36, 22, .8);
+   }
+
+   .nav-menu {
          position: fixed;
          top: 0;
          right: -100%;
@@ -1642,6 +1881,31 @@
       .nav-menu a {
          font-size: 1.2rem;
          letter-spacing: 4px;
+      }
+
+      .nav-item-dropdown {
+         flex-wrap: wrap;
+         justify-content: center;
+         gap: .4rem;
+      }
+
+      .nav-sub-toggle svg {
+         width: 16px;
+         height: 16px;
+      }
+
+      .nav-submenu {
+         position: static;
+         min-width: 0;
+         width: min(84vw, 360px);
+         box-shadow: none;
+         margin-top: .35rem;
+      }
+
+      .nav-submenu a {
+         font-size: .95rem;
+         letter-spacing: 1.6px;
+         text-align: center;
       }
 
       /* Animate Burger to X */

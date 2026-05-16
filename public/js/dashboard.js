@@ -2,8 +2,20 @@
 const cur = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
 let mx = 0, my = 0, rx = 0, ry = 0;
-document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.left = mx + 'px'; cur.style.top = my + 'px'; });
-(function animRing() { rx += (mx - rx) * .12; ry += (my - ry) * .12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animRing); })();
+if (cur && ring) {
+   document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cur.style.left = mx + 'px';
+      cur.style.top = my + 'px';
+   });
+   (function animRing() {
+      rx += (mx - rx) * .12;
+      ry += (my - ry) * .12;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(animRing);
+   })();
+}
 
 /* ─ NAVBAR SCROLL ─ */
 const nav = document.getElementById('nav');
@@ -11,23 +23,90 @@ window.addEventListener('scroll', () => {
    if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
 });
 
-/* ─ MOBILE NAV ─ */
-const navToggle = document.getElementById('navToggle');
-const navMenu = document.getElementById('navMenu');
-const navLinks = document.querySelectorAll('.nav-menu a');
+/* ─ PROFILE DROPDOWN ─ */
+const profileButton = document.getElementById('profileButton');
+const profileMenu   = document.getElementById('profileMenu');
 
-if (navToggle && navMenu) {
-   navToggle.addEventListener('click', () => {
-      navToggle.classList.toggle('active');
+if (profileButton && profileMenu) {
+   profileButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      profileMenu.classList.toggle('show');
+   });
+
+   // Tutup jika klik di luar
+   document.addEventListener('click', (e) => {
+      if (!profileMenu.contains(e.target) && !profileButton.contains(e.target)) {
+         profileMenu.classList.remove('show');
+      }
+   });
+
+   // Tutup setelah pilih menu
+   profileMenu.querySelectorAll('.profile-item').forEach(link => {
+      link.addEventListener('click', () => profileMenu.classList.remove('show'));
+   });
+}
+
+/* ─ MOBILE BURGER NAV ─ */
+const navToggleMobile = document.getElementById('navToggleMobile');
+const navMenu = document.getElementById('navMenu');
+const navLinks = document.querySelectorAll('.nav-menu a:not(.profile-btn):not(.nav-link-main)');
+const navSubToggles = document.querySelectorAll('.nav-sub-toggle');
+const navDropdownMainLinks = document.querySelectorAll('.nav-item-dropdown > .nav-link-main');
+const mobileQuery = window.matchMedia('(max-width: 900px)');
+
+function isMobileMenuMode() {
+   return mobileQuery.matches || (navMenu && navMenu.classList.contains('active'));
+}
+
+navSubToggles.forEach(toggle => {
+   toggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const wrap = toggle.closest('.nav-item-dropdown');
+      if (!wrap) return;
+      wrap.classList.toggle('open');
+      const expanded = wrap.classList.contains('open');
+      toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+   });
+});
+
+navDropdownMainLinks.forEach(link => {
+   link.addEventListener('click', (e) => {
+      if (isMobileMenuMode()) {
+         e.preventDefault();
+         e.stopPropagation();
+         e.stopImmediatePropagation();
+         const wrap = link.closest('.nav-item-dropdown');
+         if (!wrap) return;
+         wrap.classList.toggle('open');
+         const toggle = wrap.querySelector('.nav-sub-toggle');
+         if (toggle) toggle.setAttribute('aria-expanded', wrap.classList.contains('open') ? 'true' : 'false');
+      }
+   });
+});
+
+if (navToggleMobile && navMenu) {
+   navToggleMobile.addEventListener('click', () => {
+      navToggleMobile.classList.toggle('active');
       navMenu.classList.toggle('active');
       document.body.classList.toggle('overflow-hidden');
+      if (!navMenu.classList.contains('active')) {
+         document.querySelectorAll('.nav-item-dropdown.open').forEach(item => item.classList.remove('open'));
+         navSubToggles.forEach(toggle => toggle.setAttribute('aria-expanded', 'false'));
+         if (profileMenu) profileMenu.classList.remove('show');
+      }
    });
 
    navLinks.forEach(link => {
       link.addEventListener('click', () => {
-         navToggle.classList.remove('active');
+         navToggleMobile.classList.remove('active');
          navMenu.classList.remove('active');
          document.body.classList.remove('overflow-hidden');
+         document.querySelectorAll('.nav-item-dropdown.open').forEach(item => item.classList.remove('open'));
+         navSubToggles.forEach(toggle => toggle.setAttribute('aria-expanded', 'false'));
+         if (profileMenu) profileMenu.classList.remove('show');
       });
    });
 }

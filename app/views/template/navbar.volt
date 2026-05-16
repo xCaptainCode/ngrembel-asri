@@ -5,23 +5,77 @@
    </a>
    <ul class="nav-menu" id="navMenu">
       <li class="{{ this.request.getURI() == url('') ? 'active' : '' }}"><a href="{{ url('') }}">Dashboard</a></li>
-      <li class="{{ this.request.getURI() == url('fasilitas') ? 'active' : '' }}"><a
-            href="{{ url('fasilitas') }}">Fasilitas</a></li>
-      <li class="{{ this.request.getURI() == url('menu') ? 'active' : '' }}"><a href="{{ url('menu') }}">Restoran</a>
+      <li class="{{ this.request.getURI() == url('menu') ? 'active' : '' }}"><a href="{{ url('menu') }}">Price List</a></li>
+      <li class="nav-item-dropdown {{ this.request.getURI() == url('wahana') ? 'active' : '' }}">
+         <a href="javascript:void(0);" class="nav-sub-toggle profile-btn" data-target="wahanaSubmenu">Wahana</a>
+         <ul class="nav-submenu" id="wahanaSubmenu">
+            <li><a href="{{ url('wahana/permainan') }}">Permainan</a></li>
+            <li><a href="{{ url('wahana/paintball') }}">Paintball</a></li>
+            <li><a href="{{ url('wahana/field_trip') }}">Field Trip</a></li>
+            <li><a href="{{ url('wahana/fun_game') }}">Fun Game</a></li>
+         </ul>
       </li>
-      <li class="{{ request.getURI() == url('wahana') ? 'active' : '' }}"><a href="{{ url('wahana') }}">Wahana</a></li>
-      <li class="{{ request.getURI() == url('kritiksaran') ? 'active' : '' }}"><a href="{{ url('kritiksaran') }}">Kritik
-            & Saran</a></li>
+      <li class="{{ this.request.getURI() == url('minizoo') ? 'active' : '' }}"><a href="{{ url('minizoo') }}">Mini Zoo</a></li>
+      <li class="{{ this.request.getURI() == url('fasilitas') ? 'active' : '' }}"><a href="{{ url('fasilitas') }}">Fasilitas</a></li>
+      <li class="{{ this.request.getURI() == url('galeri') ? 'active' : '' }}"><a href="{{ url('galeri') }}">Galeri</a></li>
+      <li class="{{ this.request.getURI() == url('kritiksaran') ? 'active' : '' }}"><a href="{{ url('kritiksaran') }}">Kritik & Saran</a></li>
+      <!-- session  -->
       {% if session.get('id') %}
-      <li><a href="{{ url('login/logout') }}" class="nav-book">Logout</a></li>
+      <li class="profile-wrap">
+         <a href="javascript:void(0);" class="nav-book profile-btn" id="profileButton">
+            <span class="profile-avatar">{{ session.get('nama')|slice(0,1)|upper }}</span>
+            <span>{{ session.get('nama') }}</span>
+            <svg class="profile-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+               <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+         </a>
+
+         <div class="nav-profile-menu" id="profileMenu">
+            <div class="profile-header">
+               <div class="profile-avatar-lg">{{ session.get('nama')|slice(0,1)|upper }}</div>
+               <div class="profile-info">
+                  <span class="profile-name">{{ session.get('nama') }}</span>
+                  <span class="profile-badge">Member</span>
+               </div>
+            </div>
+
+            <div class="profile-divider"></div>
+
+            <a href="{{ url('member/point') }}" class="profile-item">
+               <span class="profile-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+               </span>
+               Point Saya
+            </a>
+            
+            <a href="{{ url('member/history') }}" class="profile-item">
+               <span class="profile-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+               </span>
+               Riwayat Transaksi
+            </a>
+
+            <div class="profile-divider"></div>
+
+            <a href="{{ url('login/logout') }}" class="profile-item profile-logout">
+               <span class="profile-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+               </span>
+               Keluar
+            </a>
+         </div>
+      </li>
       {% else %}
       <li><a href="{{ url('login') }}" class="nav-book">Masuk / Daftar</a></li>
       {% endif %}
    </ul>
 
-   <div class="nav-toggle" id="navToggle">
-      <span></span>
-      <span></span>
-      <span></span>
-   </div>
+   <!-- Mobile burger (non-profile) -->
+   <button class="nav-toggle" id="navToggleMobile" aria-expanded="false" aria-controls="navMenu" style="background-color: transparent; border: none; color:var(--gold); cursor: pointer;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+         <line x1="3" y1="12" x2="21" y2="12"></line>
+         <line x1="3" y1="6" x2="21" y2="6"></line>
+         <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+   </button>
 </nav>

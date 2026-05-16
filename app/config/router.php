@@ -26,9 +26,39 @@ $router->add("/menu",
         "action"     => "index",
     ]
 );
-$router->add("/wahana",
+$router->add("/wahana/permainan",
     [
         "controller" => "wahana",
+        "action"     => "permainan",
+    ]
+);
+$router->add("/paintball",
+    [
+        "controller" => "wahana",
+        "action"     => "paintball",
+    ]
+);
+$router->add("/field_trip",
+    [
+        "controller" => "wahana",
+        "action"     => "field_trip",
+    ]
+);
+// $router->add("/fun-game",
+//     [
+//         "controller" => "wahana",
+//         "action"     => "fun_game",
+//     ]
+// );
+$router->add("/galeri",
+    [
+        "controller" => "galeri",
+        "action"     => "index",
+    ]
+);
+$router->add("/minizoo",
+    [
+        "controller" => "minizoo",
         "action"     => "index",
     ]
 );

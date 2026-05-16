@@ -89,7 +89,7 @@
 </section>
 
 <!-- ═══ PARALLAX QUOTE ═══ -->
-<div class="parallax-divider">
+{# <div class="parallax-divider">
     <div class="pd-bg" id="pdBg1"
         style="background-image:url('https://images.unsplash.com/photo-1448375240586-882707db888b?w=1400&q=70')"></div>
     <div class="pd-overlay"></div>
@@ -97,10 +97,10 @@
         <p class="pd-quote">"Di sini, waktu melambat —<br /><em>alam bicara, jiwa beristirahat."</em></p>
         <p class="pd-author">— Wisata Ngrembel Asri</p>
     </div>
-</div>
+</div> #}
 
 <!-- ═══ FASILITAS ═══ -->
-<section id="fasilitas">
+{# <section id="fasilitas">
     <p class="s-label r">Apa yang Kami Tawarkan</p>
     <h2 class="s-title r">Fasilitas <em>Premium</em></h2>
     <div class="divider-gold r"></div>
@@ -200,10 +200,10 @@
         </div>
         </div>
     </div>
-</section>
+</section> #}
 
 <!-- ═══ PARALLAX 2 ═══ -->
-<div class="parallax-divider">
+{# <div class="parallax-divider">
     <div class="pd-bg" id="pdBg2"
         style="background-image:url('https://images.unsplash.com/photo-1555244162-803834f70033?w=1400&q=70')"></div>
     <div class="pd-overlay"></div>
@@ -211,10 +211,10 @@
         <p class="pd-quote">Restoran kami hadir with cita rasa<br /><em>autentik</em>, bahan segar.</p>
         <p class="pd-author">— Dapur Ngrembel Asri</p>
     </div>
-</div>
+</div> #}
 
 <!-- ═══ MENU ═══ -->
-<section id="menu">
+{# <section id="menu">
     <p class="s-label r">Restoran Ngrembel Asri</p>
     <h2 class="s-title r">Menu <em>Favorit</em></h2>
     <div class="divider-gold r"></div>
@@ -280,10 +280,10 @@
         </div>
         </div>
     </div>
-</section>
+</section> #}
 
 <!-- ═══ GALERI SLIDESHOW ═══ -->
-<section id="galeri">
+{# <section id="galeri">
     <p class="s-label r">Potret Keindahan</p>
     <h2 class="s-title r">Galeri <em style="color: var(--gold2);">Keseruan</em></h2>
     <div class="divider-gold r"></div>
@@ -325,7 +325,7 @@
         </div>
         <div class="galeri-thumbs" id="galThumbsWrap"></div>
     </div>
-</section>
+</section> #}
 
 <!-- ═══ TIKET / CTA ═══ -->
 <section id="tiket">
