@@ -92,8 +92,8 @@ $di->setShared('view', function () {
                 return  'Helpers::ucwords(' . $resolvedArgs . ');';
             });
 
-            $volt->getCompiler()->addFunction('get_setting', function($resolvedArgs, $exprArgs) {
-                return 'Setting::getVal(' . $resolvedArgs . ')';
+            $volt->getCompiler()->addFunction('get_val', function($resolvedArgs, $exprArgs) {
+                return 'Dashboard::getVal(' . $resolvedArgs . ')';
             });
 
             return $volt;

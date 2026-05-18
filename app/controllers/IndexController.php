@@ -1,19 +1,13 @@
 <?php
 
-use Phalcon\Db;
 use Phalcon\Mvc\Controller;
 
 class IndexController extends Controller {
    public function indexAction() {
-      if ($this->hasDashboardAccess()) {
-        
-      }
+      $dashboard = $this->db->fetchOne(
+         "SELECT * FROM dashboard ORDER BY updated_at DESC NULLS LAST, created_at DESC NULLS LAST LIMIT 1",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+      $this->view->setVar('dashboard', $dashboard ?: []);
    }
-
-
-   private function hasDashboardAccess() {
-      $role = strtoupper((string) $this->session->get('role'));
-      return in_array($role, [], true);
-   }
-
 }
