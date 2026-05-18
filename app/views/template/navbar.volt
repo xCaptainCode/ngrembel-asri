@@ -19,6 +19,23 @@
       <li class="{{ this.request.getURI() == url('fasilitas') ? 'active' : '' }}"><a href="{{ url('fasilitas') }}">Fasilitas</a></li>
       <li class="{{ this.request.getURI() == url('galeri') ? 'active' : '' }}"><a href="{{ url('galeri') }}">Galeri</a></li>
       <li class="{{ this.request.getURI() == url('kritiksaran') ? 'active' : '' }}"><a href="{{ url('kritiksaran') }}">Kritik & Saran</a></li>
+      {% if session.get('role') == 'admin' %}
+      <li class="nav-item-dropdown {{ this.request.getURI() == url('settings') or this.request.getURI() == url('settings/dashboard') or this.request.getURI() == url('settings/price_list') or this.request.getURI() == url('settings/permainan') or this.request.getURI() == url('settings/paintball') or this.request.getURI() == url('settings/field_trip') or this.request.getURI() == url('settings/fun_game') or this.request.getURI() == url('settings/mini_zoo') or this.request.getURI() == url('settings/fasilitas') or this.request.getURI() == url('settings/galeri') or this.request.getURI() == url('settings/kritik_saran') ? 'active' : '' }}">
+         <a href="javascript:void(0);" class="nav-sub-toggle profile-btn" data-target="settingsSubmenu">Settings</a>
+         <ul class="nav-submenu" id="settingsSubmenu">
+            <li><a href="{{ url('settings/dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url('settings/price_list') }}">Price List</a></li>
+            <li><a href="{{ url('settings/permainan') }}">Permainan</a></li>
+            <li><a href="{{ url('settings/paintball') }}">Paintball</a></li>
+            <li><a href="{{ url('settings/field_trip') }}">Field Trip</a></li>
+            <li><a href="{{ url('settings/fun_game') }}">Fun Game</a></li>
+            <li><a href="{{ url('settings/mini_zoo') }}">Mini Zoo</a></li>
+            <li><a href="{{ url('settings/fasilitas') }}">Fasilitas</a></li>
+            <li><a href="{{ url('settings/galeri') }}">Galeri</a></li>
+            <li><a href="{{ url('settings/kritik_saran') }}">Kritik & Saran</a></li>
+         </ul>
+      </li>
+      {% endif %}
       <!-- session  -->
       {% if session.get('id') %}
       <li class="profile-wrap">

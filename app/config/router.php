@@ -68,6 +68,12 @@ $router->add("/kritiksaran",
         "action"     => "index",
     ]
 );
+$router->add("/settings/:action",
+    [
+        "controller" => "settings",
+        "action"     => 1,
+    ]
+);
 
 $router->add("/login",
     [

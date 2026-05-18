@@ -38,6 +38,11 @@ class Member extends \Phalcon\Mvc\Model
      * @var boolean
      */
     public $is_active;
+    /**
+     *
+     * @var string
+     */
+    public $role;
 
 
     /**

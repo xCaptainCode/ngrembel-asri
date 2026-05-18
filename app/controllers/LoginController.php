@@ -29,7 +29,7 @@ class LoginController extends \Phalcon\Mvc\Controller {
 
       try {
          // Verifikasi password langsung di query menggunakan crypt() PostgreSQL
-         $sql = "SELECT id, no_member, nama, no_hp, email
+         $sql = "SELECT id, no_member, nama, no_hp, email, role
             FROM members
             WHERE email = :email
               AND password = crypt(:password, password)
@@ -50,6 +50,7 @@ class LoginController extends \Phalcon\Mvc\Controller {
          $this->session->set('no_member', $result['no_member']);
          $this->session->set('no_hp', $result['no_hp']);
          $this->session->set('email', $result['email']);
+         $this->session->set('role', $result['role']);
          $this->session->set('user_photo', $result['id'] . '.png');
 
       } catch (\Throwable $e) {
