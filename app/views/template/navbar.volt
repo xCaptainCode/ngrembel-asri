@@ -7,7 +7,12 @@
       <li class="{{ this.request.getURI() == url('') ? 'active' : '' }}"><a href="{{ url('') }}">Dashboard</a></li>
       <li class="{{ this.request.getURI() == url('menu') ? 'active' : '' }}"><a href="{{ url('menu') }}">Price List</a></li>
       <li class="nav-item-dropdown {{ this.request.getURI() == url('wahana') ? 'active' : '' }}">
-         <a href="javascript:void(0);" class="nav-sub-toggle profile-btn" data-target="wahanaSubmenu">Wahana</a>
+         <a href="javascript:void(0);" class="nav-link-main nav-sub-toggle" data-target="wahanaSubmenu">
+            <span>Wahana</span>
+            <svg class="dropdown-chevron" width="10" height="10" viewBox="0 0 12 12" fill="none">
+               <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+         </a>
          <ul class="nav-submenu" id="wahanaSubmenu">
             <li><a href="{{ url('wahana/permainan') }}">Permainan</a></li>
             <li><a href="{{ url('wahana/paintball') }}">Paintball</a></li>
@@ -21,7 +26,12 @@
       <li class="{{ this.request.getURI() == url('kritiksaran') ? 'active' : '' }}"><a href="{{ url('kritiksaran') }}">Kritik & Saran</a></li>
       {% if session.get('role') == 'admin' %}
       <li class="nav-item-dropdown {{ this.request.getURI() == url('settings') or this.request.getURI() == url('settings/dashboard') or this.request.getURI() == url('settings/price_list') or this.request.getURI() == url('settings/permainan') or this.request.getURI() == url('settings/paintball') or this.request.getURI() == url('settings/field_trip') or this.request.getURI() == url('settings/fun_game') or this.request.getURI() == url('settings/mini_zoo') or this.request.getURI() == url('settings/fasilitas') or this.request.getURI() == url('settings/galeri') or this.request.getURI() == url('settings/kritik_saran') ? 'active' : '' }}">
-         <a href="javascript:void(0);" class="nav-sub-toggle profile-btn" data-target="settingsSubmenu">Settings</a>
+         <a href="javascript:void(0);" class="nav-link-main nav-sub-toggle" data-target="settingsSubmenu">
+            <span>Settings</span>
+            <svg class="dropdown-chevron" width="10" height="10" viewBox="0 0 12 12" fill="none">
+               <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+         </a>
          <ul class="nav-submenu" id="settingsSubmenu">
             <li><a href="{{ url('settings/dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url('settings/price_list') }}">Price List</a></li>
@@ -83,7 +93,7 @@
          </div>
       </li>
       {% else %}
-      <li><a href="{{ url('login') }}" class="nav-book">Masuk / Daftar</a></li>
+      <li><a href="{{ url('login') }}" class="nav-book px-3">Masuk / Daftar</a></li>
       {% endif %}
    </ul>
 

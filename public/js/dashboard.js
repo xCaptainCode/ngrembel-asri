@@ -50,9 +50,9 @@ if (profileButton && profileMenu) {
 /* ─ MOBILE BURGER NAV ─ */
 const navToggleMobile = document.getElementById('navToggleMobile');
 const navMenu = document.getElementById('navMenu');
-const navLinks = document.querySelectorAll('.nav-menu a:not(.profile-btn):not(.nav-link-main)');
+const navLinks = document.querySelectorAll('.nav-menu a:not(.profile-btn):not(.nav-link-main):not(.nav-sub-toggle)');
 const navSubToggles = document.querySelectorAll('.nav-sub-toggle');
-const navDropdownMainLinks = document.querySelectorAll('.nav-item-dropdown > .nav-link-main');
+const navDropdownMainLinks = document.querySelectorAll('.nav-item-dropdown > .nav-link-main:not(.nav-sub-toggle)');
 const mobileQuery = window.matchMedia('(max-width: 900px)');
 
 function isMobileMenuMode() {
@@ -61,14 +61,27 @@ function isMobileMenuMode() {
 
 navSubToggles.forEach(toggle => {
    toggle.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      const wrap = toggle.closest('.nav-item-dropdown');
-      if (!wrap) return;
-      wrap.classList.toggle('open');
-      const expanded = wrap.classList.contains('open');
-      toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      if (isMobileMenuMode()) {
+         e.preventDefault();
+         e.stopPropagation();
+         e.stopImmediatePropagation();
+         const wrap = toggle.closest('.nav-item-dropdown');
+         if (!wrap) return;
+
+         // Toggle current dropdown
+         wrap.classList.toggle('open');
+         const expanded = wrap.classList.contains('open');
+         toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+         // Close other dropdowns
+         document.querySelectorAll('.nav-item-dropdown.open').forEach(item => {
+            if (item !== wrap) {
+               item.classList.remove('open');
+               const itemToggle = item.querySelector('.nav-sub-toggle');
+               if (itemToggle) itemToggle.setAttribute('aria-expanded', 'false');
+            }
+         });
+      }
    });
 });
 
@@ -80,9 +93,21 @@ navDropdownMainLinks.forEach(link => {
          e.stopImmediatePropagation();
          const wrap = link.closest('.nav-item-dropdown');
          if (!wrap) return;
+
+         // Toggle current dropdown
          wrap.classList.toggle('open');
+         const expanded = wrap.classList.contains('open');
          const toggle = wrap.querySelector('.nav-sub-toggle');
-         if (toggle) toggle.setAttribute('aria-expanded', wrap.classList.contains('open') ? 'true' : 'false');
+         if (toggle) toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+         // Close other dropdowns
+         document.querySelectorAll('.nav-item-dropdown.open').forEach(item => {
+            if (item !== wrap) {
+               item.classList.remove('open');
+               const itemToggle = item.querySelector('.nav-sub-toggle');
+               if (itemToggle) itemToggle.setAttribute('aria-expanded', 'false');
+            }
+         });
       }
    });
 });
