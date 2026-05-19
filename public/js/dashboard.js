@@ -216,38 +216,3 @@ function showMenu(id, btn) {
       setTimeout(() => el.classList.add('on'), 50);
    });
 }
-
-/* ─ GALLERY SLIDESHOW ─ */
-const gslides = document.querySelectorAll('.gslide');
-const thumbsWrap = document.getElementById('galThumbsWrap');
-let gcur = 0;
-const gImgs = [
-   'images/wahana/aviary.jpg',
-   'images/wahana/ember-tumpah.jpg',
-   'images/wahana/kolam-tm.jpg',
-   'images/wahana/paintball.jpg',
-   'images/wahana/pasar-kembang.jpg',
-   'images/wahana/omah-playon.jpg',
-];
-
-if (thumbsWrap && gslides.length > 0) {
-   gImgs.forEach((src, i) => {
-      const t = document.createElement('div');
-      t.className = 'gthumb' + (i === 0 ? ' active' : '');
-      t.innerHTML = `<img src="${src}" alt="thumb ${i + 1}"/>`;
-      t.onclick = () => goGaleri(i);
-      thumbsWrap.appendChild(t);
-   });
-}
-
-function goGaleri(n) {
-   if (gslides.length === 0) return;
-   gslides[gcur].classList.remove('active');
-   const thumbs = document.querySelectorAll('.gthumb');
-   if (thumbs[gcur]) thumbs[gcur].classList.remove('active');
-   gcur = (n + gslides.length) % gslides.length;
-   gslides[gcur].classList.add('active');
-   if (thumbs[gcur]) thumbs[gcur].classList.add('active');
-}
-function moveGaleri(dir) { if (gslides.length > 0) goGaleri(gcur + dir); }
-if (gslides.length > 0) setInterval(() => goGaleri(gcur + 1), 4500);

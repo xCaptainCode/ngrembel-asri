@@ -5,7 +5,7 @@
    </a>
    <ul class="nav-menu" id="navMenu">
       <li class="{{ this.request.getURI() == url('') ? 'active' : '' }}"><a href="{{ url('') }}">Dashboard</a></li>
-      <li class="{{ this.request.getURI() == url('menu') ? 'active' : '' }}"><a href="{{ url('menu') }}">Price List</a></li>
+      <li class="{{ this.request.getURI() == url('pricelist') ? 'active' : '' }}"><a href="{{ url('pricelist') }}">Price List</a></li>
       <li class="nav-item-dropdown {{ this.request.getURI() == url('wahana') ? 'active' : '' }}">
          <a href="javascript:void(0);" class="nav-link-main nav-sub-toggle" data-target="wahanaSubmenu">
             <span>Wahana</span>

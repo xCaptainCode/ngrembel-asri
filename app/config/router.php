@@ -20,9 +20,9 @@ $router->add("/fasilitas",
         "action"     => "index",
     ]
 );
-$router->add("/menu",
+$router->add("/pricelist",
     [
-        "controller" => "menu",
+        "controller" => "pricelist",
         "action"     => "index",
     ]
 );
@@ -44,12 +44,6 @@ $router->add("/field_trip",
         "action"     => "field_trip",
     ]
 );
-// $router->add("/fun-game",
-//     [
-//         "controller" => "wahana",
-//         "action"     => "fun_game",
-//     ]
-// );
 $router->add("/galeri",
     [
         "controller" => "galeri",
