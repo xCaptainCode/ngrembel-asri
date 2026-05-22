@@ -162,6 +162,7 @@
             {% set is_free_val = (item['is_free'] == 't' or item['is_free'] === true or item['is_free'] === '1' or item['is_free'] === 1) ? '1' : '0' %}
 
             <div class="masonry-card r" data-is-free="{{ is_free_val }}">
+               {% if item['img_url'] %}
                <img class="masonry-img" src="{{ url(image_src) }}" alt="{{ item['nama'] }}" />
                <div class="masonry-overlay"></div>
                <div class="masonry-body">
@@ -177,6 +178,23 @@
                      {% endif %}
                   </div>
                </div>
+               {% else %}
+               <div class="no-image-placeholder"
+                    style="display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:320px; background:#102417; border:2px dashed rgba(212,177,90,0.3); border-radius:12px; color:#d4b15a; padding: 24px; text-align: center; position: relative;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        style="margin-bottom:12px; opacity:0.7;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <h4 style="margin:0 0 6px; font-size:1.2rem; color:#fff;">{{ item['nama'] }}</h4>
+                    <h5 style="margin:0 0 6px; font-size:0.8rem; color:#ffffffc0;">{{ item['deskripsi'] }}</h5>
+                    <span
+                        style="display: inline-block; background: rgba(212,177,90,0.15); color: #d4b15a; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(212,177,90,0.3); letter-spacing: 0.5px; margin-bottom: 8px;">{{
+                        item['kategori'] }}</span>
+                    <p style="margin:0; font-size:0.85rem; opacity:0.6;">(Gambar belum tersedia)</p>
+                </div>
+               {% endif %}
             </div>
          {% endfor %}
       </div>
