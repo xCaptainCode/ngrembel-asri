@@ -166,7 +166,7 @@
                <img class="masonry-img" src="{{ url(image_src) }}" alt="{{ item['nama'] }}" />
                <div class="masonry-overlay"></div>
                <div class="masonry-body">
-                  {# <div class="masonry-title">{{ item['nama'] }}</div> #}
+                  <div class="masonry-title">{{ item['nama'] }}</div>
                   {% if item['deskripsi'] %}
                      <div class="masonry-desc">{{ item['deskripsi'] }}</div>
                   {% endif %}
@@ -174,7 +174,7 @@
                      {% if is_free_val == '1' %}
                         <span class="masonry-tag free">GRATIS</span>
                      {% else %}
-                        <span class="masonry-tag">{{ item['nama'] }}</span>
+                        <span class="masonry-tag">Rp {{ Helpers.number(item['harga_tiket']) }}</span>
                      {% endif %}
                   </div>
                </div>

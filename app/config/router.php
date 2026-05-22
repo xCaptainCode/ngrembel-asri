@@ -32,7 +32,7 @@ $router->add("/wahana/permainan",
         "action"     => "permainan",
     ]
 );
-$router->add("/wahana/aintball",
+$router->add("/wahana/paintball",
     [
         "controller" => "wahana",
         "action"     => "paintball",
