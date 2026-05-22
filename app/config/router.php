@@ -32,16 +32,22 @@ $router->add("/wahana/permainan",
         "action"     => "permainan",
     ]
 );
-$router->add("/paintball",
+$router->add("/wahana/aintball",
     [
         "controller" => "wahana",
         "action"     => "paintball",
     ]
 );
-$router->add("/field_trip",
+$router->add("/wahana/field_trip",
     [
         "controller" => "wahana",
         "action"     => "field_trip",
+    ]
+);
+$router->add("/wahana/fun_game",
+    [
+        "controller" => "wahana",
+        "action"     => "fun_game",
     ]
 );
 $router->add("/galeri",

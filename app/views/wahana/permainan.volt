@@ -6,7 +6,7 @@
       margin-top: 2rem;
    }
    .masonry-card {
-      display: inline-block;
+      /* display: inline-block; */
       width: 100%;
       margin-bottom: 1.5rem;
       break-inside: avoid;
@@ -210,7 +210,7 @@
                      {% if is_free_val == '1' %}
                         <span class="masonry-tag free">GRATIS</span>
                      {% else %}
-                        <span class="masonry-tag">Rp {{ item['harga_tiket'] }}</span>
+                        <span class="masonry-tag">Rp {{ Helpers.number(item['harga_tiket']) }}</span>
                      {% endif %}
                   </div>
                </div>

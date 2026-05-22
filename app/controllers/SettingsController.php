@@ -719,7 +719,6 @@ class SettingsController extends Controller {
 
       return $this->response->redirect('settings/permainan');
    }
-
    public function create_wahanaAction() {
       $this->view->disable();
 
@@ -815,9 +814,662 @@ class SettingsController extends Controller {
       return $this->response->redirect('settings/permainan');
    }
 
-   public function paintballAction() {}
-   public function field_tripAction() {}
-   public function fun_gameAction() {}
+   public function paintballAction() {
+      $wahanaList = $this->db->fetchAll(
+         "SELECT w.*,
+                m_created.nama AS created_by_nama,
+                m_updated.nama AS updated_by_nama
+          FROM wahana w
+          LEFT JOIN members m_created ON CAST(w.created_by AS TEXT) = CAST(m_created.id AS TEXT)
+          LEFT JOIN members m_updated ON CAST(w.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
+          WHERE w.kategori = 'PAINTBALL'
+          ORDER BY w.urutan ASC, w.nama ASC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('wahanaList', $wahanaList ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('wahana_update_success'));
+      $this->view->setVar('updateError', $this->session->get('wahana_update_error'));
+
+      $this->session->remove('wahana_update_success');
+      $this->session->remove('wahana_update_error');
+   }
+
+   public function update_paintballAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/paintball');
+      }
+
+      $id = (string) $this->request->getPost('id', 'string');
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_free = $this->request->getPost('is_free') ? true : false;
+      $harga_tiket = $is_free ? 0 : (int) $this->request->getPost('harga_tiket', 'int');
+      $urutan = (int) $this->request->getPost('urutan', 'int');
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($id === '' || $nama === '') {
+         $this->session->set('wahana_update_error', 'ID dan Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/paintball');
+      }
+
+      try {
+         $imgUrl = null;
+
+         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $fileInfo = $_FILES['image_file'];
+            $uploadError = (int) $fileInfo['error'];
+
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               $errorMessage = 'Upload gambar gagal. Kode error: ' . $uploadError;
+               if ($uploadError === UPLOAD_ERR_INI_SIZE) {
+                  $errorMessage = 'Upload gagal: ukuran file melebihi batas server.';
+               }
+               $this->session->set('wahana_update_error', $errorMessage);
+               return $this->response->redirect('settings/paintball');
+            }
+
+            $tmpName = (string) $fileInfo['tmp_name'];
+            $originalName = (string) $fileInfo['name'];
+            $fileSize = (int) $fileInfo['size'];
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               $this->session->set('wahana_update_error', 'File gambar tidak valid.');
+               return $this->response->redirect('settings/paintball');
+            }
+
+            if ($fileSize > (5 * 1024 * 1024)) {
+               $this->session->set('wahana_update_error', 'Ukuran file maksimal 5MB.');
+               return $this->response->redirect('settings/paintball');
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (! in_array($extension, $allowedExtensions, true)) {
+               $this->session->set('wahana_update_error', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, GIF, atau WEBP.');
+               return $this->response->redirect('settings/paintball');
+            }
+
+            $targetDir = BASE_PATH . '/public/images/wahana';
+            if (! is_dir($targetDir)) {
+               @mkdir($targetDir, 0755, true);
+            }
+
+            $safePrefix = 'wahana_paintball';
+            $fileName = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $targetDir . '/' . $fileName;
+
+            if (! move_uploaded_file($tmpName, $targetPath)) {
+               $this->session->set('wahana_update_error', 'Gagal menyimpan file gambar ke server.');
+               return $this->response->redirect('settings/paintball');
+            }
+            $imgUrl = 'images/wahana/' . $fileName;
+         }
+
+         $params = [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'is_free' => $is_free ? 'true' : 'false',
+            'harga_tiket' => $harga_tiket,
+            'urutan' => $urutan,
+            'is_active' => $is_active ? 'true' : 'false',
+            'updated_by' => (string) $this->session->get('id'),
+            'id' => $id,
+         ];
+
+         if ($imgUrl !== null) {
+            $sql = "UPDATE wahana
+                  SET nama = :nama, deskripsi = :deskripsi, is_free = :is_free, harga_tiket = :harga_tiket, urutan = :urutan, is_active = :is_active, img_url = :img_url, updated_at = NOW(), updated_by = :updated_by
+                  WHERE id = :id";
+            $params['img_url'] = $imgUrl;
+         } else {
+            $sql = "UPDATE wahana
+                  SET nama = :nama, deskripsi = :deskripsi, is_free = :is_free, harga_tiket = :harga_tiket, urutan = :urutan, is_active = :is_active, updated_at = NOW(), updated_by = :updated_by
+                  WHERE id = :id";
+         }
+
+         $this->db->execute($sql, $params);
+         $this->session->set('wahana_update_success', "Wahana {$nama} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('wahana_update_error', 'Gagal memperbarui data wahana: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/paintball');
+   }
+
+   public function create_paintballAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/paintball');
+      }
+
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_free = $this->request->getPost('is_free') ? true : false;
+      $harga_tiket = $is_free ? 0 : (int) $this->request->getPost('harga_tiket', 'int');
+      $urutan = (int) $this->request->getPost('urutan', 'int');
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($nama === '') {
+         $this->session->set('wahana_update_error', 'Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/paintball');
+      }
+
+      try {
+         $imgUrl = '';
+
+         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $fileInfo = $_FILES['image_file'];
+            $uploadError = (int) $fileInfo['error'];
+
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               $errorMessage = 'Upload gambar gagal. Kode error: ' . $uploadError;
+               if ($uploadError === UPLOAD_ERR_INI_SIZE) {
+                  $errorMessage = 'Upload gagal: ukuran file melebihi batas server.';
+               }
+               $this->session->set('wahana_update_error', $errorMessage);
+               return $this->response->redirect('settings/paintball');
+            }
+
+            $tmpName = (string) $fileInfo['tmp_name'];
+            $originalName = (string) $fileInfo['name'];
+            $fileSize = (int) $fileInfo['size'];
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               $this->session->set('wahana_update_error', 'File gambar tidak valid.');
+               return $this->response->redirect('settings/paintball');
+            }
+
+            if ($fileSize > (5 * 1024 * 1024)) {
+               $this->session->set('wahana_update_error', 'Ukuran file maksimal 5MB.');
+               return $this->response->redirect('settings/paintball');
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (! in_array($extension, $allowedExtensions, true)) {
+               $this->session->set('wahana_update_error', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, GIF, atau WEBP.');
+               return $this->response->redirect('settings/paintball');
+            }
+
+            $targetDir = BASE_PATH . '/public/images/wahana';
+            if (! is_dir($targetDir)) {
+               @mkdir($targetDir, 0755, true);
+            }
+
+            $safePrefix = 'wahana_paintball';
+            $fileName = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $targetDir . '/' . $fileName;
+
+            if (! move_uploaded_file($tmpName, $targetPath)) {
+               $this->session->set('wahana_update_error', 'Gagal menyimpan file gambar ke server.');
+               return $this->response->redirect('settings/paintball');
+            }
+            $imgUrl = 'images/wahana/' . $fileName;
+         }
+
+         $sql = "INSERT INTO wahana (kategori, nama, deskripsi, harga_tiket, is_free, urutan, is_active, img_url, created_at, created_by, updated_at, updated_by)
+                 VALUES ('PAINTBALL', :nama, :deskripsi, :harga_tiket, :is_free, :urutan, :is_active, :img_url, NOW(), :created_by, NOW(), :updated_by)";
+
+         $this->db->execute($sql, [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'harga_tiket' => $harga_tiket,
+            'is_free' => $is_free ? 'true' : 'false',
+            'urutan' => $urutan,
+            'is_active' => $is_active ? 'true' : 'false',
+            'img_url' => $imgUrl,
+            'created_by' => (string) $this->session->get('id'),
+            'updated_by' => (string) $this->session->get('id'),
+         ]);
+
+         $this->session->set('wahana_update_success', "Wahana {$nama} berhasil ditambahkan.");
+      } catch (\Throwable $e) {
+         $this->session->set('wahana_update_error', 'Gagal menambahkan wahana baru: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/paintball');
+   }
+   
+   public function field_tripAction() {
+      $wahanaList = $this->db->fetchAll(
+         "SELECT w.*,
+                m_created.nama AS created_by_nama,
+                m_updated.nama AS updated_by_nama
+          FROM wahana w
+          LEFT JOIN members m_created ON CAST(w.created_by AS TEXT) = CAST(m_created.id AS TEXT)
+          LEFT JOIN members m_updated ON CAST(w.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
+          WHERE w.kategori = 'FIELD TRIP'
+          ORDER BY w.urutan ASC, w.nama ASC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('wahanaList', $wahanaList ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('wahana_update_success'));
+      $this->view->setVar('updateError', $this->session->get('wahana_update_error'));
+
+      $this->session->remove('wahana_update_success');
+      $this->session->remove('wahana_update_error');
+   }
+   public function update_field_tripAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/field_trip');
+      }
+
+      $id = (string) $this->request->getPost('id', 'string');
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_free = $this->request->getPost('is_free') ? true : false;
+      $harga_tiket = $is_free ? 0 : (int) $this->request->getPost('harga_tiket', 'int');
+      $urutan = (int) $this->request->getPost('urutan', 'int');
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($id === '' || $nama === '') {
+         $this->session->set('wahana_update_error', 'ID dan Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/field_trip');
+      }
+
+      try {
+         $imgUrl = null;
+
+         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $fileInfo = $_FILES['image_file'];
+            $uploadError = (int) $fileInfo['error'];
+
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               $errorMessage = 'Upload gambar gagal. Kode error: ' . $uploadError;
+               if ($uploadError === UPLOAD_ERR_INI_SIZE) {
+                  $errorMessage = 'Upload gagal: ukuran file melebihi batas server.';
+               }
+               $this->session->set('wahana_update_error', $errorMessage);
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            $tmpName = (string) $fileInfo['tmp_name'];
+            $originalName = (string) $fileInfo['name'];
+            $fileSize = (int) $fileInfo['size'];
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               $this->session->set('wahana_update_error', 'File gambar tidak valid.');
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            if ($fileSize > (5 * 1024 * 1024)) {
+               $this->session->set('wahana_update_error', 'Ukuran file maksimal 5MB.');
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (! in_array($extension, $allowedExtensions, true)) {
+               $this->session->set('wahana_update_error', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, GIF, atau WEBP.');
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            $targetDir = BASE_PATH . '/public/images/wahana';
+            if (! is_dir($targetDir)) {
+               @mkdir($targetDir, 0755, true);
+            }
+
+            $safePrefix = 'wahana_field_trip';
+            $fileName = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $targetDir . '/' . $fileName;
+
+            if (! move_uploaded_file($tmpName, $targetPath)) {
+               $this->session->set('wahana_update_error', 'Gagal menyimpan file gambar ke server.');
+               return $this->response->redirect('settings/field_trip');
+            }
+            $imgUrl = 'images/wahana/' . $fileName;
+         }
+
+         $params = [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'is_free' => $is_free ? 'true' : 'false',
+            'harga_tiket' => $harga_tiket,
+            'urutan' => $urutan,
+            'is_active' => $is_active ? 'true' : 'false',
+            'updated_by' => (string) $this->session->get('id'),
+            'id' => $id,
+         ];
+
+         if ($imgUrl !== null) {
+            $sql = "UPDATE wahana
+                  SET nama = :nama, deskripsi = :deskripsi, is_free = :is_free, harga_tiket = :harga_tiket, urutan = :urutan, is_active = :is_active, img_url = :img_url, updated_at = NOW(), updated_by = :updated_by
+                  WHERE id = :id";
+            $params['img_url'] = $imgUrl;
+         } else {
+            $sql = "UPDATE wahana
+                  SET nama = :nama, deskripsi = :deskripsi, is_free = :is_free, harga_tiket = :harga_tiket, urutan = :urutan, is_active = :is_active, updated_at = NOW(), updated_by = :updated_by
+                  WHERE id = :id";
+         }
+
+         $this->db->execute($sql, $params);
+         $this->session->set('wahana_update_success', "Wahana {$nama} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('wahana_update_error', 'Gagal memperbarui data wahana: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/field_trip');
+   }
+   public function create_field_tripAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/field_trip');
+      }
+
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_free = $this->request->getPost('is_free') ? true : false;
+      $harga_tiket = $is_free ? 0 : (int) $this->request->getPost('harga_tiket', 'int');
+      $urutan = (int) $this->request->getPost('urutan', 'int');
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($nama === '') {
+         $this->session->set('wahana_update_error', 'Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/field_trip');
+      }
+
+      try {
+         $imgUrl = '';
+
+         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $fileInfo = $_FILES['image_file'];
+            $uploadError = (int) $fileInfo['error'];
+
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               $errorMessage = 'Upload gambar gagal. Kode error: ' . $uploadError;
+               if ($uploadError === UPLOAD_ERR_INI_SIZE) {
+                  $errorMessage = 'Upload gagal: ukuran file melebihi batas server.';
+               }
+               $this->session->set('wahana_update_error', $errorMessage);
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            $tmpName = (string) $fileInfo['tmp_name'];
+            $originalName = (string) $fileInfo['name'];
+            $fileSize = (int) $fileInfo['size'];
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               $this->session->set('wahana_update_error', 'File gambar tidak valid.');
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            if ($fileSize > (5 * 1024 * 1024)) {
+               $this->session->set('wahana_update_error', 'Ukuran file maksimal 5MB.');
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (! in_array($extension, $allowedExtensions, true)) {
+               $this->session->set('wahana_update_error', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, GIF, atau WEBP.');
+               return $this->response->redirect('settings/field_trip');
+            }
+
+            $targetDir = BASE_PATH . '/public/images/wahana';
+            if (! is_dir($targetDir)) {
+               @mkdir($targetDir, 0755, true);
+            }
+
+            $safePrefix = 'wahana_field_trip';
+            $fileName = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $targetDir . '/' . $fileName;
+
+            if (! move_uploaded_file($tmpName, $targetPath)) {
+               $this->session->set('wahana_update_error', 'Gagal menyimpan file gambar ke server.');
+               return $this->response->redirect('settings/field_trip');
+            }
+            $imgUrl = 'images/wahana/' . $fileName;
+         }
+
+         $sql = "INSERT INTO wahana (kategori, nama, deskripsi, harga_tiket, is_free, urutan, is_active, img_url, created_at, created_by, updated_at, updated_by)
+                 VALUES ('FIELD TRIP', :nama, :deskripsi, :harga_tiket, :is_free, :urutan, :is_active, :img_url, NOW(), :created_by, NOW(), :updated_by)";
+
+         $this->db->execute($sql, [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'harga_tiket' => $harga_tiket,
+            'is_free' => $is_free ? 'true' : 'false',
+            'urutan' => $urutan,
+            'is_active' => $is_active ? 'true' : 'false',
+            'img_url' => $imgUrl,
+            'created_by' => (string) $this->session->get('id'),
+            'updated_by' => (string) $this->session->get('id'),
+         ]);
+
+         $this->session->set('wahana_update_success', "Wahana {$nama} berhasil ditambahkan.");
+      } catch (\Throwable $e) {
+         $this->session->set('wahana_update_error', 'Gagal menambahkan wahana baru: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/field_trip');
+   }
+   
+   public function fun_gameAction() {
+      $wahanaList = $this->db->fetchAll(
+         "SELECT w.*,
+                m_created.nama AS created_by_nama,
+                m_updated.nama AS updated_by_nama
+          FROM wahana w
+          LEFT JOIN members m_created ON CAST(w.created_by AS TEXT) = CAST(m_created.id AS TEXT)
+          LEFT JOIN members m_updated ON CAST(w.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
+          WHERE w.kategori = 'FUN GAME'
+          ORDER BY w.urutan ASC, w.nama ASC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('wahanaList', $wahanaList ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('wahana_update_success'));
+      $this->view->setVar('updateError', $this->session->get('wahana_update_error'));
+
+      $this->session->remove('wahana_update_success');
+      $this->session->remove('wahana_update_error');
+   }
+   public function update_fun_gameAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/fun_game');
+      }
+
+      $id = (string) $this->request->getPost('id', 'string');
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_free = $this->request->getPost('is_free') ? true : false;
+      $harga_tiket = $is_free ? 0 : (int) $this->request->getPost('harga_tiket', 'int');
+      $urutan = (int) $this->request->getPost('urutan', 'int');
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($id === '' || $nama === '') {
+         $this->session->set('wahana_update_error', 'ID dan Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/fun_game');
+      }
+
+      try {
+         $imgUrl = null;
+
+         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $fileInfo = $_FILES['image_file'];
+            $uploadError = (int) $fileInfo['error'];
+
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               $errorMessage = 'Upload gambar gagal. Kode error: ' . $uploadError;
+               if ($uploadError === UPLOAD_ERR_INI_SIZE) {
+                  $errorMessage = 'Upload gagal: ukuran file melebihi batas server.';
+               }
+               $this->session->set('wahana_update_error', $errorMessage);
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            $tmpName = (string) $fileInfo['tmp_name'];
+            $originalName = (string) $fileInfo['name'];
+            $fileSize = (int) $fileInfo['size'];
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               $this->session->set('wahana_update_error', 'File gambar tidak valid.');
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            if ($fileSize > (5 * 1024 * 1024)) {
+               $this->session->set('wahana_update_error', 'Ukuran file maksimal 5MB.');
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (! in_array($extension, $allowedExtensions, true)) {
+               $this->session->set('wahana_update_error', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, GIF, atau WEBP.');
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            $targetDir = BASE_PATH . '/public/images/wahana';
+            if (! is_dir($targetDir)) {
+               @mkdir($targetDir, 0755, true);
+            }
+
+            $safePrefix = 'wahana_fun_game';
+            $fileName = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $targetDir . '/' . $fileName;
+
+            if (! move_uploaded_file($tmpName, $targetPath)) {
+               $this->session->set('wahana_update_error', 'Gagal menyimpan file gambar ke server.');
+               return $this->response->redirect('settings/fun_game');
+            }
+            $imgUrl = 'images/wahana/' . $fileName;
+         }
+
+         $params = [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'is_free' => $is_free ? 'true' : 'false',
+            'harga_tiket' => $harga_tiket,
+            'urutan' => $urutan,
+            'is_active' => $is_active ? 'true' : 'false',
+            'updated_by' => (string) $this->session->get('id'),
+            'id' => $id,
+         ];
+
+         if ($imgUrl !== null) {
+            $sql = "UPDATE wahana
+                  SET nama = :nama, deskripsi = :deskripsi, is_free = :is_free, harga_tiket = :harga_tiket, urutan = :urutan, is_active = :is_active, img_url = :img_url, updated_at = NOW(), updated_by = :updated_by
+                  WHERE id = :id";
+            $params['img_url'] = $imgUrl;
+         } else {
+            $sql = "UPDATE wahana
+                  SET nama = :nama, deskripsi = :deskripsi, is_free = :is_free, harga_tiket = :harga_tiket, urutan = :urutan, is_active = :is_active, updated_at = NOW(), updated_by = :updated_by
+                  WHERE id = :id";
+         }
+
+         $this->db->execute($sql, $params);
+         $this->session->set('wahana_update_success', "Wahana {$nama} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('wahana_update_error', 'Gagal memperbarui data wahana: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/fun_game');
+   }
+   public function create_fun_gameAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/fun_game');
+      }
+
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_free = $this->request->getPost('is_free') ? true : false;
+      $harga_tiket = $is_free ? 0 : (int) $this->request->getPost('harga_tiket', 'int');
+      $urutan = (int) $this->request->getPost('urutan', 'int');
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($nama === '') {
+         $this->session->set('wahana_update_error', 'Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/fun_game');
+      }
+
+      try {
+         $imgUrl = '';
+
+         if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $fileInfo = $_FILES['image_file'];
+            $uploadError = (int) $fileInfo['error'];
+
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               $errorMessage = 'Upload gambar gagal. Kode error: ' . $uploadError;
+               if ($uploadError === UPLOAD_ERR_INI_SIZE) {
+                  $errorMessage = 'Upload gagal: ukuran file melebihi batas server.';
+               }
+               $this->session->set('wahana_update_error', $errorMessage);
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            $tmpName = (string) $fileInfo['tmp_name'];
+            $originalName = (string) $fileInfo['name'];
+            $fileSize = (int) $fileInfo['size'];
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               $this->session->set('wahana_update_error', 'File gambar tidak valid.');
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            if ($fileSize > (5 * 1024 * 1024)) {
+               $this->session->set('wahana_update_error', 'Ukuran file maksimal 5MB.');
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (! in_array($extension, $allowedExtensions, true)) {
+               $this->session->set('wahana_update_error', 'Format gambar tidak didukung. Gunakan JPG, JPEG, PNG, GIF, atau WEBP.');
+               return $this->response->redirect('settings/fun_game');
+            }
+
+            $targetDir = BASE_PATH . '/public/images/wahana';
+            if (! is_dir($targetDir)) {
+               @mkdir($targetDir, 0755, true);
+            }
+
+            $safePrefix = 'wahana_fun_game';
+            $fileName = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+            $targetPath = $targetDir . '/' . $fileName;
+
+            if (! move_uploaded_file($tmpName, $targetPath)) {
+               $this->session->set('wahana_update_error', 'Gagal menyimpan file gambar ke server.');
+               return $this->response->redirect('settings/fun_game');
+            }
+            $imgUrl = 'images/wahana/' . $fileName;
+         }
+
+         $sql = "INSERT INTO wahana (kategori, nama, deskripsi, harga_tiket, is_free, urutan, is_active, img_url, created_at, created_by, updated_at, updated_by)
+                 VALUES ('FUN GAME', :nama, :deskripsi, :harga_tiket, :is_free, :urutan, :is_active, :img_url, NOW(), :created_by, NOW(), :updated_by)";
+
+         $this->db->execute($sql, [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi,
+            'harga_tiket' => $harga_tiket,
+            'is_free' => $is_free ? 'true' : 'false',
+            'urutan' => $urutan,
+            'is_active' => $is_active ? 'true' : 'false',
+            'img_url' => $imgUrl,
+            'created_by' => (string) $this->session->get('id'),
+            'updated_by' => (string) $this->session->get('id'),
+         ]);
+
+         $this->session->set('wahana_update_success', "Wahana {$nama} berhasil ditambahkan.");
+      } catch (\Throwable $e) {
+         $this->session->set('wahana_update_error', 'Gagal menambahkan wahana baru: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/fun_game');
+   }
+
    public function mini_zooAction() {}
    public function fasilitasAction() {}
    public function galeriAction() {}

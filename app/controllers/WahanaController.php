@@ -16,12 +16,30 @@ class WahanaController extends Controller {
         $this->view->setVar('wahanaList', $wahanaList ?: []);
     }
     public function paintballAction() {
-        // Halaman Paintball
+        $wahanaList = $this->db->fetchAll(
+            "SELECT * FROM wahana 
+             WHERE kategori = 'PAINTBALL' AND is_active = true 
+             ORDER BY urutan ASC, nama ASC",
+            \Phalcon\Db::FETCH_ASSOC
+        );
+        $this->view->setVar('wahanaList', $wahanaList ?: []);
     }
     public function field_tripAction() {
-        // Halaman Field Trip
+        $wahanaList = $this->db->fetchAll(
+            "SELECT * FROM wahana 
+             WHERE kategori = 'FIELD TRIP' AND is_active = true 
+             ORDER BY urutan ASC, nama ASC",
+            \Phalcon\Db::FETCH_ASSOC
+        );
+        $this->view->setVar('wahanaList', $wahanaList ?: []);
     }
     public function fun_gameAction() {
-        // Halaman Fun Game
+        $wahanaList = $this->db->fetchAll(
+            "SELECT * FROM wahana 
+             WHERE kategori = 'FUN GAME' AND is_active = true 
+             ORDER BY urutan ASC, nama ASC",
+            \Phalcon\Db::FETCH_ASSOC
+        );
+        $this->view->setVar('wahanaList', $wahanaList ?: []);
     }
 }

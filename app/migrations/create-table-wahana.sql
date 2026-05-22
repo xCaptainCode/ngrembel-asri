@@ -1,4 +1,4 @@
--- Active: 1776057900509@@192.168.1.3@5432@ngrembel_asri
+-- Active: 1779269040582@@localhost@5432@ngrembel_asri@public
 -- wahana   id, nama, slug, deskripsi, foto, harga_tiket, syarat, is_active, urutan
 
 -- DROP TABLE wahana;
