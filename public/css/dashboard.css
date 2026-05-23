@@ -36,7 +36,7 @@
       /* background: var(--deep); */
       color: var(--cream);
       overflow-x: hidden;
-      cursor: none;
+      /* cursor: none; */
    }
 
    .overflow-hidden {

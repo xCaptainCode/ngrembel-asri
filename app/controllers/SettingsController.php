@@ -1472,6 +1472,341 @@ class SettingsController extends Controller {
 
    public function mini_zooAction() {}
    public function fasilitasAction() {}
-   public function galeriAction() {}
+   public function galeriAction() {
+      $galleryList = $this->db->fetchAll(
+         "SELECT g.*,
+                m_created.nama AS created_by_nama,
+                m_updated.nama AS updated_by_nama
+          FROM gallery g
+          LEFT JOIN members m_created ON CAST(g.create_by AS TEXT) = CAST(m_created.id AS TEXT)
+          LEFT JOIN members m_updated ON CAST(g.update_by AS TEXT) = CAST(m_updated.id AS TEXT)
+          ORDER BY g.updated_at DESC NULLS LAST, g.created_at DESC NULLS LAST",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('galleryList', $galleryList ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('gallery_update_success'));
+      $this->view->setVar('updateError', $this->session->get('gallery_update_error'));
+      $this->session->remove('gallery_update_success');
+      $this->session->remove('gallery_update_error');
+   }
+   public function update_galeriAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/galeri');
+      }
+
+      $id = (string) $this->request->getPost('id', 'string');
+      $title = trim((string) $this->request->getPost('title', 'string'));
+      $description = trim((string) $this->request->getPost('description', 'string'));
+      $category = strtoupper(trim((string) $this->request->getPost('category', 'string')));
+      $typeMedia = strtoupper(trim((string) $this->request->getPost('type_media', 'string')));
+      $isActive = $this->request->getPost('is_active') ? true : false;
+
+      $allowedCategory = ['WAHANA', 'AREA', 'EVENT'];
+      $allowedTypeMedia = ['VIDEO', 'FOTO'];
+
+      if ($id === '' || $title === '' || ! in_array($category, $allowedCategory, true) || ! in_array($typeMedia, $allowedTypeMedia, true)) {
+         $this->session->set('gallery_update_error', 'Data galeri tidak valid.');
+         return $this->response->redirect('settings/galeri');
+      }
+
+      try {
+         $currentGallery = $this->db->fetchOne(
+            "SELECT resource_url FROM gallery WHERE id = :id LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['id' => $id]
+         );
+         $oldResourceUrl = $currentGallery['resource_url'] ?? '';
+
+         $newResourceUrl = trim((string) $this->request->getPost('resource_url', 'string'));
+
+         if ($newResourceUrl === '') {
+             $newResourceUrl = $oldResourceUrl;
+         } else {
+             // Validasi path: hanya boleh dari folder gallery kita
+             $allowedPrefixes = ['images/gallery/', 'videos/gallery/'];
+             $valid = false;
+             foreach ($allowedPrefixes as $prefix) {
+                 if (strpos($newResourceUrl, $prefix) === 0) {
+                     $valid = true;
+                     break;
+                 }
+             }
+             if (!$valid || strpos($newResourceUrl, '..') !== false) {
+                 $this->session->set('gallery_update_error', 'Path media tidak valid.');
+                 return $this->response->redirect('settings/galeri');
+             }
+
+             // Pastikan file benar-benar ada di server
+             if (!file_exists(BASE_PATH . '/public/' . $newResourceUrl)) {
+                 $this->session->set('gallery_update_error', 'File media tidak ditemukan di server.');
+                 return $this->response->redirect('settings/galeri');
+             }
+         }
+
+         if ($newResourceUrl === '') {
+            $this->session->set('gallery_update_error', 'Media galeri wajib diupload.');
+            return $this->response->redirect('settings/galeri');
+         }
+
+         $sql = "UPDATE gallery
+               SET title = :title,
+                   description = :description,
+                   category = :category,
+                   type_media = :type_media,
+                   resource_url = :resource_url,
+                   is_active = :is_active,
+                   updated_at = NOW(),
+                   update_by = :update_by
+               WHERE id = :id";
+
+         $this->db->execute($sql, [
+            'title' => $title,
+            'description' => $description === '' ? null : $description,
+            'category' => $category,
+            'type_media' => $typeMedia,
+            'resource_url' => $newResourceUrl,
+            'is_active' => $isActive ? 'true' : 'false',
+            'update_by' => (string) $this->session->get('id'),
+            'id' => $id,
+         ]);
+
+         $this->session->set('gallery_update_success', "Data galeri {$title} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('gallery_update_error', 'Gagal memperbarui data galeri: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/galeri');
+   }
+   public function create_galeriAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/galeri');
+      }
+
+      $title = trim((string) $this->request->getPost('title', 'string'));
+      $description = trim((string) $this->request->getPost('description', 'string'));
+      $category = strtoupper(trim((string) $this->request->getPost('category', 'string')));
+      $typeMedia = strtoupper(trim((string) $this->request->getPost('type_media', 'string')));
+      $isActive = $this->request->getPost('is_active') ? true : false;
+
+      $allowedCategory = ['WAHANA', 'AREA', 'EVENT'];
+      $allowedTypeMedia = ['VIDEO', 'FOTO'];
+
+      if ($title === '' || ! in_array($category, $allowedCategory, true) || ! in_array($typeMedia, $allowedTypeMedia, true)) {
+         $this->session->set('gallery_update_error', 'Data galeri tidak valid.');
+         return $this->response->redirect('settings/galeri');
+      }
+
+      try {
+         $newResourceUrl = trim((string) $this->request->getPost('resource_url', 'string'));
+
+         if ($newResourceUrl === '') {
+             $this->session->set('gallery_update_error', 'Media galeri wajib diupload terlebih dahulu.');
+             return $this->response->redirect('settings/galeri');
+         }
+
+         // Validasi path: hanya boleh dari folder gallery kita
+         $allowedPrefixes = ['images/gallery/', 'videos/gallery/'];
+         $valid = false;
+         foreach ($allowedPrefixes as $prefix) {
+             if (strpos($newResourceUrl, $prefix) === 0) {
+                 $valid = true;
+                 break;
+             }
+         }
+         if (!$valid || strpos($newResourceUrl, '..') !== false) {
+             $this->session->set('gallery_update_error', 'Path media tidak valid.');
+             return $this->response->redirect('settings/galeri');
+         }
+
+         // Pastikan file benar-benar ada di server
+         if (!file_exists(BASE_PATH . '/public/' . $newResourceUrl)) {
+             $this->session->set('gallery_update_error', 'File media tidak ditemukan di server.');
+             return $this->response->redirect('settings/galeri');
+         }
+
+         $sql = "INSERT INTO gallery (title, description, category, type_media, resource_url, is_active, created_at, updated_at, create_by, update_by)
+                 VALUES (:title, :description, :category, :type_media, :resource_url, :is_active, NOW(), NOW(), :create_by, :update_by)";
+
+         $this->db->execute($sql, [
+            'title' => $title,
+            'description' => $description === '' ? null : $description,
+            'category' => $category,
+            'type_media' => $typeMedia,
+            'resource_url' => $newResourceUrl,
+            'is_active' => $isActive ? 'true' : 'false',
+            'create_by' => (string) $this->session->get('id'),
+            'update_by' => (string) $this->session->get('id'),
+         ]);
+
+         $this->session->set('gallery_update_success', "Galeri {$title} berhasil ditambahkan.");
+      } catch (\Throwable $e) {
+      $this->session->set('gallery_update_error', 'Gagal menambahkan data galeri: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/galeri');
+   }
+   public function chunk_upload_galeriAction() {
+      $this->view->disable();
+
+      // Hanya terima POST + AJAX
+      if (!$this->request->isPost()) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Invalid request.'], 405);
+      }
+
+      // Ambil parameter chunk
+      $uploadId    = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $this->request->getPost('upload_id'));
+      $chunkIndex  = (int) $this->request->getPost('chunk_index');
+      $totalChunks = (int) $this->request->getPost('total_chunks');
+      $typeMedia   = strtoupper(trim((string) $this->request->getPost('type_media', 'string')));
+      $category    = strtoupper(trim((string) $this->request->getPost('category', 'string')));
+
+      // Validasi dasar
+      if ($uploadId === '' || $totalChunks < 1 || $chunkIndex < 0 || $chunkIndex >= $totalChunks) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Parameter chunk tidak valid.']);
+      }
+
+      $allowedTypeMedia = ['VIDEO', 'FOTO'];
+      $allowedCategory  = ['WAHANA', 'AREA', 'EVENT'];
+      if (!in_array($typeMedia, $allowedTypeMedia, true) || !in_array($category, $allowedCategory, true)) {
+          return $this->jsonResponse(['success' => false, 'message' => 'type_media atau category tidak valid.']);
+      }
+
+      // Validasi file chunk
+      $fileInfo = $_FILES['chunk_data'] ?? null;
+      if (!is_array($fileInfo) || (int)($fileInfo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Chunk file tidak diterima.']);
+      }
+
+      $tmpName   = (string) $fileInfo['tmp_name'];
+      $chunkSize = (int) $fileInfo['size'];
+
+      if (!is_uploaded_file($tmpName) || $chunkSize <= 0) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Chunk tidak valid.']);
+      }
+
+      // Batas ukuran chunk: 4MB per chunk
+      if ($chunkSize > (4 * 1024 * 1024)) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Ukuran chunk melebihi 4MB.']);
+      }
+
+      // Siapkan direktori temp untuk upload_id ini
+      $tempDir = sys_get_temp_dir() . '/gallery_chunks/' . $uploadId;
+      if (!is_dir($tempDir)) {
+          mkdir($tempDir, 0750, true);
+      }
+
+      // Simpan chunk
+      $chunkPath = $tempDir . '/chunk_' . $chunkIndex;
+      if (!move_uploaded_file($tmpName, $chunkPath)) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Gagal menyimpan chunk ke server.']);
+      }
+
+      // Cek apakah semua chunk sudah diterima
+      $receivedCount = count(glob($tempDir . '/chunk_*'));
+      if ($receivedCount < $totalChunks) {
+          // Belum semua chunk tiba
+          return $this->jsonResponse([
+              'success'   => true,
+              'done'      => false,
+              'received'  => $receivedCount,
+              'total'     => $totalChunks,
+              'message'   => "Chunk {$chunkIndex} diterima.",
+          ]);
+      }
+
+      // ── Semua chunk sudah ada, rakit file ──
+      $isFoto = $typeMedia === 'FOTO';
+
+      // Tentukan ekstensi dari chunk pertama (simpan di metadata file)
+      $metaFile = $tempDir . '/meta.json';
+      $meta     = [];
+      if (file_exists($metaFile)) {
+          $meta = json_decode(file_get_contents($metaFile), true) ?: [];
+      }
+      $extension = $meta['extension'] ?? ($isFoto ? 'jpg' : 'mp4');
+
+      $targetDir = $isFoto
+          ? (BASE_PATH . '/public/images/gallery')
+          : (BASE_PATH . '/public/videos/gallery');
+
+      if (!is_dir($targetDir)) {
+          mkdir($targetDir, 0755, true);
+      }
+
+      $safePrefix = 'gallery_' . strtolower($category) . '_' . strtolower($typeMedia);
+      $fileName   = $safePrefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+      $targetPath = $targetDir . '/' . $fileName;
+
+      // Gabungkan semua chunk secara berurutan
+      $outHandle = fopen($targetPath, 'wb');
+      if (!$outHandle) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Gagal membuat file output.']);
+      }
+
+      for ($i = 0; $i < $totalChunks; $i++) {
+          $chunkFile = $tempDir . '/chunk_' . $i;
+          if (!file_exists($chunkFile)) {
+              fclose($outHandle);
+              return $this->jsonResponse(['success' => false, 'message' => "Chunk ke-{$i} hilang saat perakitan."]);
+          }
+          $chunkHandle = fopen($chunkFile, 'rb');
+          stream_copy_to_stream($chunkHandle, $outHandle);
+          fclose($chunkHandle);
+      }
+      fclose($outHandle);
+
+      // Bersihkan folder temp
+      foreach (glob($tempDir . '/*') as $f) {
+          @unlink($f);
+      }
+      @rmdir($tempDir);
+
+      $filePath = ($isFoto ? 'images/gallery/' : 'videos/gallery/') . $fileName;
+
+      return $this->jsonResponse([
+          'success'   => true,
+          'done'      => true,
+          'file_path' => $filePath,
+          'message'   => 'Upload selesai.',
+      ]);
+   }
+
+   public function save_extension_galeriAction() {
+      $this->view->disable();
+
+      if (!$this->request->isPost()) {
+          return $this->jsonResponse(['success' => false], 405);
+      }
+
+      $uploadId  = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $this->request->getPost('upload_id'));
+      $extension = strtolower(preg_replace('/[^a-z0-9]/', '', (string) $this->request->getPost('extension')));
+
+      $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov', 'm4v'];
+      if ($uploadId === '' || !in_array($extension, $allowedExtensions, true)) {
+          return $this->jsonResponse(['success' => false, 'message' => 'Parameter tidak valid.']);
+      }
+
+      $tempDir = sys_get_temp_dir() . '/gallery_chunks/' . $uploadId;
+      if (!is_dir($tempDir)) {
+          mkdir($tempDir, 0750, true);
+      }
+
+      file_put_contents($tempDir . '/meta.json', json_encode(['extension' => $extension]));
+
+      return $this->jsonResponse(['success' => true]);
+   }
+
+   private function jsonResponse(array $data, int $statusCode = 200): \Phalcon\Http\Response {
+      $this->response->setStatusCode($statusCode);
+      $this->response->setContentType('application/json');
+      $this->response->setContent(json_encode($data));
+      return $this->response->send();
+   }
+
    public function kritik_saranAction() {}
 }
