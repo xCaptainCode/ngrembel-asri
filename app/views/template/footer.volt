@@ -23,30 +23,30 @@
          </div>
       </div>
       <div class="footer-col">
-         <h4>Navigasi</h4>
-         <ul>
-            <li><a href="#sejarah">Sejarah</a></li>
-            <li><a href="#fasilitas">Fasilitas</a></li>
-            <li><a href="#menu">Restoran</a></li>
-            <li><a href="#galeri">Galeri</a></li>
-            <li><a href="#tiket">Harga Tiket</a></li>
-         </ul>
-      </div>
-      <div class="footer-col">
          <h4>Kontak</h4>
          <ul>
-            <li> 📍 {{ get_val('alamat', '-') }}</li>
-            <li> 📱 {{ get_val('telp', '') }} (WA)</li>
+            <li> <i class="fas fa-map-marked-alt mr-2"></i> {{ get_val('alamat', '-') }}</li>
+            <li> <i class="fas fa-envelope mr-2"></i> {{ get_val('email', '-') }}</li>
+            <li> <i class="fas fa-phone mr-2"></i> {{ get_val('telp', '') }}</li>
          </ul>
       </div>
       <div class="footer-col">
-         <h4>Fasilitas</h4>
+         <h4>Navigasi</h4>
          <ul>
-            <li><a href="#">Mini Zoo</a></li>
-            <li><a href="#">Arena Paintball</a></li>
-            <li><a href="#">Field Trip</a></li>
-            <li><a href="#">Outbound</a></li>
-            <li><a href="#">Restoran</a></li>
+            <li><a href="{{ url('') }}">Home</a></li>
+            <li><a href="{{ url('pricelist') }}">Price List</a></li>
+            <li><a href="{{ url('minizoo') }}">Mini Zoo</a></li>
+            <li><a href="{{ url('fasilitas') }}">Fasilitas</a></li>
+            <li><a href="{{ url('galeri') }}">Galeri</a></li>
+         </ul>
+      </div>
+      <div class="footer-col">
+         <h4>Wahana</h4>
+         <ul>
+            <li><a href="{{ url('wahana/permainan') }}">Permainan</a></li>
+            <li><a href="{{ url('wahana/paintball') }}">Paintball</a></li>
+            <li><a href="{{ url('wahana/field_trip') }}">Field Trip</a></li>
+            <li><a href="{{ url('wahana/fun_game') }}">Fun Game</a></li>
          </ul>
       </div>
    </div>

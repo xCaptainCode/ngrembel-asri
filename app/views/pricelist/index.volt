@@ -1,6 +1,6 @@
 <style>
     /* ═══════════════════════════════════════════
-   GALERI SLIDESHOW FULL
+    GALERI SLIDESHOW FULL
    ═══════════════════════════════════════════ */
     #galeri {
         padding: 1rem 5%;
@@ -33,8 +33,12 @@
 
     .gslide img {
         width: 100%;
-        height: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
         object-fit: contain;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .gslide-overlay {
@@ -258,7 +262,7 @@
     }
 </style>
 
-<section id="page-header" style="padding-top: 120px; text-align: center;">
+<section id="page-header" style="padding-top: 140px; padding-bottom: 2rem; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle at center, rgba(16, 36, 23, 0.4) 0%, rgba(7, 25, 14, 0) 70%);">
     <p class="s-label r">Pilihan Menu</p>
     <h1 class="s-title r">Ahlinya <em>Ikan Bakar</em></h1>
     <div class="divider-gold r" style="margin: 1.4rem auto;"></div>
@@ -294,8 +298,8 @@
     </div>
 </section>
 
-<section id="page-header" style="padding-top: 120px; text-align: center;">
-    <p class="s-label r">Ngrembel Asri</p>
+<section id="page-header" style="padding-top: 140px; padding-bottom: 2rem; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle at center, rgba(16, 36, 23, 0.4) 0%, rgba(7, 25, 14, 0) 70%);">
+    <p class="s-label r">Daftar Harga</p>
     <h1 class="s-title r">Price <em>List</em></h1>
     <div class="divider-gold r" style="margin: 1.4rem auto;"></div>
 </section>

@@ -148,18 +148,18 @@
    }
 </style>
 
-<section id="page-header" style="padding-top: 120px; text-align: center;">
-   <p class="s-label r">Permainan Seru</p>
-   <h1 class="s-title r">Wahana <em>Permainan</em></h1>
-   <div class="divider-gold r" style="margin: 1.4rem auto;"></div>
+<section id="page-header" style="padding-top: 140px; padding-bottom: 2rem; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle at center, rgba(16, 36, 23, 0.4) 0%, rgba(7, 25, 14, 0) 70%);">
+    <p class="s-label r">Permainan Seru</p>
+    <h1 class="s-title r">Wahana <em>Permainan</em></h1>
+    <div class="divider-gold r" style="margin: 1.4rem auto;"></div>
 </section>
 
 <section id="wahana" style="padding: 2rem 5% 8rem;">
    <!-- DYNAMIC FILTER TABS -->
    <div class="filter-tabs-container r" id="filterTabs">
       <button class="filter-tab active" data-filter="all">Semua</button>
-      <button class="filter-tab" data-filter="berbayar">Berbayar</button>
       <button class="filter-tab" data-filter="gratis">Gratis</button>
+      <button class="filter-tab" data-filter="berbayar">Berbayar</button>
    </div>
 
    {% if wahanaList is empty %}
