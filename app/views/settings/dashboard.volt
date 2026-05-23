@@ -1,16 +1,33 @@
 <style>
-   .dashboard-row-readonly {
-      cursor: default;
-   }
-
-   .dashboard-row-editable {
+   .settings-row-editable {
       cursor: pointer;
+      transition: background 0.2s ease-in-out;
+   }
+   .settings-row-editable:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+   }
+   .table th, .table td {
+      vertical-align: middle;
+   }
+   .badge-type {
+      background: rgba(212, 177, 90, 0.15);
+      color: #d4b15a;
+      border: 1px solid rgba(212, 177, 90, 0.35);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.4px;
    }
 </style>
 
 <section style="padding: 120px 5% 60px; min-height: 70vh;">
-   <h1 style="margin-bottom: 12px;">Settings - Dashboard</h1>
-   <p style="margin-bottom: 16px;">Klik salah satu baris untuk edit value.</p>
+   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+      <div>
+         <h1 style="margin: 0 0 4px 0;">Settings - Dashboard</h1>
+         <p style="margin: 0;">Klik pada baris tabel untuk edit data</p>
+      </div>
+   </div>
 
    {% if updateSuccess %}
    <div style="padding:10px 12px; border:1px solid #2a9d52; background:#11361f; color:#c9f7d8; border-radius:8px; margin-bottom:14px;">
@@ -25,39 +42,47 @@
    {% endif %}
 
    {% if dashboard is empty %}
-   <p>Data dashboard belum tersedia.</p>
+   <p>Data settings belum tersedia.</p>
    {% else %}
-   {% set hiddenColumns = ['id', 'created_at', 'created_by', 'updated_by', 'created_by_nama' ] %}
-   {% set readonlyColumns = ['updated_at', 'created_by_nama', 'updated_by_nama'] %}
-   <div class="table-responsive">
-      <table class="table table-sm table-striped text-white" style="width:100%; border-collapse: collapse;">
+   <div class="table-responsive" style="overflow-x: auto; background: rgba(16, 36, 23, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;">
+      <table class="table table-sm text-white" style="width:100%; border-collapse: collapse;">
          <thead>
-            <tr>
-               <th style="text-align:left; padding:10px; border-bottom:1px solid rgba(255,255,255,.2);">Kolom</th>
-               <th style="text-align:left; padding:10px; border-bottom:1px solid rgba(255,255,255,.2);">Value</th>
+            <tr style="background: rgba(0,0,0,0.2);">
+               <th style="text-align:left; padding:12px 10px; border-bottom:2px solid rgba(255,255,255,.15);">Nama</th>
+               <th style="text-align:center; padding:12px 10px; border-bottom:2px solid rgba(255,255,255,.15);">Tipe</th>
+               <th style="text-align:left; padding:12px 10px; border-bottom:2px solid rgba(255,255,255,.15);">Nilai</th>
+               <th style="text-align:left; padding:12px 10px; border-bottom:2px solid rgba(255,255,255,.15);">Updated At</th>
             </tr>
          </thead>
-         <tbody id="dashboardTableBody">
-            {% for key, value in dashboard %}
-            {% if key not in hiddenColumns %}
-            <tr class="{{ key in readonlyColumns ? 'dashboard-row-readonly' : 'dashboard-row-editable' }}"
-               {% if key not in readonlyColumns %}
-               data-editable="1"
-               data-id="{{ dashboard['id'] }}"
-               data-column="{{ key }}"
-               data-value="{{ (value is null ? '' : value) }}"
-               {% endif %}
-               >
-               <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ key }}</td>
-               <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">
-                  {% if value is null or value == '' %}
-                  <em style="opacity:.6;">(kosong)</em>
+         <tbody id="settingsTableBody">
+            {% for item in dashboard %}
+            <tr class="settings-row-editable"
+                data-id="{{ item['id'] }}"
+                data-name="{{ item['name'] }}"
+                data-type-value="{{ item['type_value'] }}"
+                data-value="{{ item['value'] }}"
+                data-value-url="{{ item['value'] ? url(item['value']) : '' }}">
+               <td style="padding:12px 10px; border-bottom:1px solid rgba(255,255,255,.08); font-weight: 600; color: #d4b15a;">{{ item['name'] }}</td>
+               <td style="padding:12px 10px; border-bottom:1px solid rgba(255,255,255,.08); text-align: center;"><span class="badge-type">{{ item['type_value'] }}</span></td>
+               <td style="padding:12px 10px; border-bottom:1px solid rgba(255,255,255,.08); font-size: 0.9rem; opacity: 0.9; line-height: 1.4;">
+                  {% if item['type_value'] == 'FOTO' %}
+                     {% if item['value'] %}
+                        <img src="{{ url(item['value']) }}" alt="{{ item['name'] }}" style="max-height:50px; max-width:100px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.15);">
+                        <div style="font-size:0.75rem; opacity:.75; margin-top:4px;">{{ item['value'] }}</div>
+                     {% else %}
+                        <em style="opacity:.5; font-size:0.9rem;">(tidak ada)</em>
+                     {% endif %}
                   {% else %}
-                  {{ value }}
+                     {{ item['value'] ? (item['value']|length > 120 ? item['value']|slice(0, 120) ~ '...' : item['value']) : '-' }}
                   {% endif %}
                </td>
+               <td style="padding:12px 10px; border-bottom:1px solid rgba(255,255,255,.08); font-size: 0.85rem; opacity: 0.85;">
+                  {{ item['updated_at'] ? item['updated_at'] : item['created_at'] }}
+                  <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 2px;">
+                     Oleh: {{ item['updated_by_nama'] ? item['updated_by_nama'] : (item['created_by_nama'] ? item['created_by_nama'] : '-') }}
+                  </div>
+               </td>
             </tr>
-            {% endif %}
             {% endfor %}
          </tbody>
       </table>
@@ -65,97 +90,146 @@
    {% endif %}
 </section>
 
-<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;">
-   <div style="width:min(620px, 92vw); background:#102417; color:#fff; border:1px solid rgba(255,255,255,.2); border-radius:12px; padding:18px;">
-      <h3 style="margin:0 0 10px;">Edit Dashboard Field</h3>
-      <form method="post" action="{{ url('settings/update_dashboard') }}" enctype="multipart/form-data">
-         <input type="hidden" name="MAX_FILE_SIZE" value="5242880">
-         <input type="hidden" name="id" id="editId">
-         <input type="hidden" name="column" id="editColumn">
-         <div style="margin-bottom:12px;">
-            <label for="editColumnLabel" style="display:block; margin-bottom:6px;">Kolom</label>
-            <input id="editColumnLabel" type="text" readonly style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff;">
+<div id="settingModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+   <div style="width:min(640px, 92vw); background:#102417; color:#fff; border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <h3 id="settingModalTitle" style="margin:0 0 18px; font-size: 1.5rem; color:#d4b15a; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Edit Setting</h3>
+      <form method="post" action="{{ url('settings/update_dashboard') }}" enctype="multipart/form-data" id="settingForm">
+         <input type="hidden" name="id" id="formId">
+
+         <div style="margin-bottom:14px;">
+            <label for="formName" style="display:block; margin-bottom:6px; font-weight: 600;">Nama Setting</label>
+            <input id="formName" name="name" type="text" required style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff;">
          </div>
-         <div id="valueInputWrap" style="margin-bottom:14px;">
-            <label for="editValue" style="display:block; margin-bottom:6px;">Value</label>
-            <textarea name="value" id="editValue" rows="6" style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff;"></textarea>
+
+         <div style="margin-bottom:14px;">
+            <label for="formType" style="display:block; margin-bottom:6px; font-weight: 600;">Tipe Value</label>
+            <select id="formType" name="type_value" required style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; cursor: pointer;">
+               <option value="TEXT">TEXT</option>
+               <option value="FOTO">FOTO</option>
+               <option value="VIDEO">VIDEO</option>
+            </select>
          </div>
-         <div id="imageInputWrap" style="display:none; margin-bottom:14px;">
-            <label for="editImage" style="display:block; margin-bottom:6px;">Upload Gambar (Maks 5MB)</label>
-            <input type="file" name="image_file" id="editImage" accept="image/*" style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff;">
+
+         <div id="textValueContainer" style="margin-bottom:14px;">
+            <label for="formValue" style="display:block; margin-bottom:6px; font-weight: 600;">Value</label>
+            <textarea id="formValue" name="value" rows="4" style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; resize: vertical; font-family: inherit; line-height: 1.4;"></textarea>
          </div>
-         <div style="display:flex; gap:8px; justify-content:flex-end;">
-            <button type="button" id="closeModalBtn" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,.25); background:transparent; color:#fff;">Batal</button>
-            <button type="submit" style="padding:8px 14px; border-radius:8px; border:none; background:#d4b15a; color:#102417; font-weight:700;">Simpan</button>
+
+         <div id="imageValueContainer" style="margin-bottom:14px; display:none;">
+            <label style="display:block; margin-bottom:6px; font-weight: 600;">Gambar Saat Ini</label>
+            <div style="margin-bottom: 8px;">
+               <img id="imagePreview" src="" alt="Preview" style="max-height:120px; border-radius:8px; display:none; border:1px solid rgba(255,255,255,0.2);">
+               <span id="noImageText" style="font-style: italic; opacity: 0.6; display: none;">Tidak ada gambar</span>
+            </div>
+            <label for="formImage" style="display:block; margin-bottom:6px; font-weight: 600;">Upload Gambar (Maks 5MB)</label>
+            <input type="file" id="formImage" name="image_file" accept="image/*" style="width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff;">
+            <p style="margin:6px 0 0; font-size: 0.8rem; opacity: 0.7;">Untuk edit data FOTO, upload kosong berarti memakai gambar lama.</p>
+         </div>
+
+         <div style="display:flex; gap:10px; justify-content:flex-end; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+            <button type="button" id="closeModalBtn" style="padding:10px 18px; border-radius:8px; border:1px solid rgba(255,255,255,.25); background:transparent; color:#fff; cursor: pointer;">Batal</button>
+            <button type="submit" style="padding:10px 18px; border-radius:8px; border:none; background:#d4b15a; color:#102417; font-weight:700; cursor: pointer;">Simpan</button>
          </div>
       </form>
    </div>
 </div>
 
 <script>
-   (function () {
-      const modal = document.getElementById('editModal');
-      const closeModalBtn = document.getElementById('closeModalBtn');
-      const editId = document.getElementById('editId');
-      const editColumn = document.getElementById('editColumn');
-      const editColumnLabel = document.getElementById('editColumnLabel');
-      const editValue = document.getElementById('editValue');
-      const editImage = document.getElementById('editImage');
-      const valueInputWrap = document.getElementById('valueInputWrap');
-      const imageInputWrap = document.getElementById('imageInputWrap');
-      const imageColumns = ['sejarah_img_url', 'slide_img_1', 'slide_img_2', 'slide_img_3', 'slide_img_4', 'slide_img_5'];
+(function () {
+   const modal = document.getElementById('settingModal');
+   const addBtn = document.getElementById('addBtn');
+   const closeModalBtn = document.getElementById('closeModalBtn');
+   const tableBody = document.getElementById('settingsTableBody');
 
-      const tableBody = document.getElementById('dashboardTableBody');
+   const modalTitle = document.getElementById('settingModalTitle');
+   const formId = document.getElementById('formId');
+   const formName = document.getElementById('formName');
+   const formType = document.getElementById('formType');
+   const formValue = document.getElementById('formValue');
+   const formImage = document.getElementById('formImage');
 
-      function closeModal() {
-         modal.style.display = 'none';
+   const textValueContainer = document.getElementById('textValueContainer');
+   const imageValueContainer = document.getElementById('imageValueContainer');
+   const imagePreview = document.getElementById('imagePreview');
+   const noImageText = document.getElementById('noImageText');
+
+   function syncValueFieldByType() {
+      const isFoto = formType.value === 'FOTO';
+      textValueContainer.style.display = isFoto ? 'none' : 'block';
+      imageValueContainer.style.display = isFoto ? 'block' : 'none';
+   }
+
+   function openModalForCreate() {
+      modalTitle.textContent = 'Tambah Setting';
+      formId.value = '';
+      formName.value = '';
+      formType.value = 'TEXT';
+      formValue.value = '';
+      formImage.value = '';
+      imagePreview.src = '';
+      imagePreview.style.display = 'none';
+      noImageText.style.display = 'none';
+      syncValueFieldByType();
+      modal.style.display = 'flex';
+   }
+
+   function openModalForEdit(row) {
+      modalTitle.textContent = 'Edit Setting';
+      formId.value = row.dataset.id || '';
+      formName.value = row.dataset.name || '';
+      formType.value = row.dataset.typeValue || 'TEXT';
+      formValue.value = row.dataset.value || '';
+      formImage.value = '';
+
+      if (formType.value === 'FOTO') {
+         const fullUrl = row.dataset.valueUrl || '';
+         if (fullUrl) {
+            imagePreview.src = fullUrl;
+            imagePreview.style.display = 'block';
+            noImageText.style.display = 'none';
+         } else {
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            noImageText.style.display = 'inline';
+         }
+      } else {
+         imagePreview.src = '';
+         imagePreview.style.display = 'none';
+         noImageText.style.display = 'none';
       }
 
-      if (tableBody) {
-         tableBody.addEventListener('click', function (event) {
-            const row = event.target.closest('tr[data-editable="1"]');
-            if (!row) {
-               return;
-            }
+      syncValueFieldByType();
+      modal.style.display = 'flex';
+   }
 
-            editId.value = row.dataset.id || '';
-            editColumn.value = row.dataset.column || '';
-            editColumnLabel.value = row.dataset.column || '';
-            editValue.value = row.dataset.value || '';
-            if (imageColumns.includes(row.dataset.column || '')) {
-               valueInputWrap.style.display = 'none';
-               imageInputWrap.style.display = 'block';
-               editValue.value = '';
-            } else {
-               valueInputWrap.style.display = 'block';
-               imageInputWrap.style.display = 'none';
-               if (editImage) editImage.value = '';
-            }
-            modal.style.display = 'flex';
-         });
-      }
+   function closeModal() {
+      modal.style.display = 'none';
+   }
 
-      if (closeModalBtn) {
-         closeModalBtn.addEventListener('click', closeModal);
-      }
+   if (addBtn) {
+      addBtn.addEventListener('click', openModalForCreate);
+   }
 
-      if (modal) {
-         modal.addEventListener('click', function (e) {
-            if (e.target === modal) {
-               closeModal();
-            }
-         });
-      }
+   if (tableBody) {
+      tableBody.addEventListener('click', function (event) {
+         const row = event.target.closest('.settings-row-editable');
+         if (!row) return;
+         openModalForEdit(row);
+      });
+   }
 
-      if (editImage) {
-         editImage.addEventListener('change', function () {
-            const maxBytes = 5 * 1024 * 1024;
-            const file = editImage.files && editImage.files[0] ? editImage.files[0] : null;
-            if (file && file.size > maxBytes) {
-               alert('Ukuran file maksimal 5MB.');
-               editImage.value = '';
-            }
-         });
+   if (formType) {
+      formType.addEventListener('change', syncValueFieldByType);
+   }
+
+   if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', closeModal);
+   }
+
+   window.addEventListener('click', function (event) {
+      if (event.target === modal) {
+         closeModal();
       }
-   })();
+   });
+})();
 </script>

@@ -25,9 +25,9 @@
       <div class="footer-col">
          <h4>Kontak</h4>
          <ul>
-            <li> <i class="fas fa-map-marked-alt mr-2"></i> {{ get_val('alamat', '-') }}</li>
-            <li> <i class="fas fa-envelope mr-2"></i> {{ get_val('email', '-') }}</li>
-            <li> <i class="fas fa-phone mr-2"></i> {{ get_val('telp', '') }}</li>
+            <li> <i class="fas fa-map-marked-alt mr-2"></i> {{ get_setting('Alamat', '-') }}</li>
+            <li> <i class="fas fa-envelope mr-2"></i> {{ get_setting('Email', '-') }}</li>
+            <li> <i class="fas fa-phone mr-2"></i> {{ get_setting('Telp', '') }}</li>
          </ul>
       </div>
       <div class="footer-col">

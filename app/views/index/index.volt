@@ -91,7 +91,7 @@
         <div class="sejarah-media r-left">
             {% if d['sejarah_img_url'] is defined and d['sejarah_img_url'] is not null and d['sejarah_img_url'] != '' %}
             <div class="sejarah-img-wrap">
-                <img src="{{ d['sejarah_img_url'] }}" alt="Ngrembel Asri" />
+                <img src="{{ url(d['sejarah_img_url']) }}" alt="Ngrembel Asri" />
                 <div class="sejarah-frame"></div>
             </div>
             {% endif %}
