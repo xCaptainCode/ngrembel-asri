@@ -64,4 +64,5 @@ coverage/
 *.cache
 
 public/images/*
+public/videos/*
 public/plugins/*
