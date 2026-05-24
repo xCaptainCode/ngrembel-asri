@@ -33,15 +33,16 @@
             </svg>
          </a>
          <ul class="nav-submenu" id="settingsSubmenu">
-            <li class="{{ this.request.getURI() == url('settings/dashboard') ? 'active' : '' }}"><a href="{{ url('settings/dashboard') }}">Dashboard</a></li>
-            <li class="{{ this.request.getURI() == url('settings/price_list') ? 'active' : '' }}"><a href="{{ url('settings/price_list') }}">Price List</a></li>
-            <li class="{{ this.request.getURI() == url('settings/permainan') ? 'active' : '' }}"><a href="{{ url('settings/permainan') }}">Permainan</a></li>
-            <li class="{{ this.request.getURI() == url('settings/paintball') ? 'active' : '' }}"><a href="{{ url('settings/paintball') }}">Paintball</a></li>
-            <li class="{{ this.request.getURI() == url('settings/field_trip') ? 'active' : '' }}"><a href="{{ url('settings/field_trip') }}">Field Trip</a></li>
-            <li class="{{ this.request.getURI() == url('settings/fun_game') ? 'active' : '' }}"><a href="{{ url('settings/fun_game') }}">Fun Game</a></li>
-            <li class="{{ this.request.getURI() == url('settings/mini_zoo') ? 'active' : '' }}"><a href="{{ url('settings/mini_zoo') }}">Mini Zoo</a></li>
+            <li class="{{ this.request.getURI() == url('settings/member') ? 'active' : '' }}"><a href="{{ url('settings/member') }}">Member</a></li>
+            <li class="{{ this.request.getURI() == url('settings/dashboard') ? 'active' : '' }}"><a href="{{ url('settings/dashboard') }}">Dashboard <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/price_list') ? 'active' : '' }}"><a href="{{ url('settings/price_list') }}">Price List <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/permainan') ? 'active' : '' }}"><a href="{{ url('settings/permainan') }}">Permainan <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/paintball') ? 'active' : '' }}"><a href="{{ url('settings/paintball') }}">Paintball <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/field_trip') ? 'active' : '' }}"><a href="{{ url('settings/field_trip') }}">Field Trip <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/fun_game') ? 'active' : '' }}"><a href="{{ url('settings/fun_game') }}">Fun Game <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/mini_zoo') ? 'active' : '' }}"><a href="{{ url('settings/mini_zoo') }}">Mini Zoo <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/fasilitas') ? 'active' : '' }}"><a href="{{ url('settings/fasilitas') }}">Fasilitas</a></li>
-            <li class="{{ this.request.getURI() == url('settings/galeri') ? 'active' : '' }}"><a href="{{ url('settings/galeri') }}">Galeri</a></li>
+            <li class="{{ this.request.getURI() == url('settings/galeri') ? 'active' : '' }}"><a href="{{ url('settings/galeri') }}">Galeri <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/kritik_saran') ? 'active' : '' }}"><a href="{{ url('settings/kritik_saran') }}">Kritik & Saran</a></li>
          </ul>
       </li>
