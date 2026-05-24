@@ -5,6 +5,11 @@
         width: 100%;
         margin-top: 2rem;
     }
+    .masonry-grid.js-masonry-enabled {
+        column-count: initial;
+        column-gap: 0;
+        position: relative;
+    }
 
     .masonry-card {
         /* display: inline-block; */
@@ -18,6 +23,11 @@
         border: 1px solid rgba(255, 255, 255, .06);
         transition: transform .4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .4s, opacity .4s, scale .4s;
         cursor: default;
+    }
+    .masonry-grid.js-masonry-enabled .masonry-card {
+        position: absolute;
+        margin-bottom: 0;
+        will-change: transform;
     }
 
     .masonry-card:hover {
@@ -160,9 +170,83 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('miniZooGrid');
         const cards = document.querySelectorAll('.masonry-card');
+
         cards.forEach((card, idx) => {
             card.style.transitionDelay = `${idx * 0.05}s`;
+        });
+
+        if (!grid || cards.length === 0) {
+            return;
+        }
+
+        const getColumnCount = () => {
+            if (window.innerWidth <= 576) return 1;
+            if (window.innerWidth <= 992) return 2;
+            return 3;
+        };
+
+        const getGap = () => (window.innerWidth <= 992 ? 19.2 : 16);
+
+        const layoutMasonry = () => {
+            grid.classList.add('js-masonry-enabled');
+
+            const columnCount = getColumnCount();
+            const gap = getGap();
+            const gridWidth = grid.clientWidth;
+            const columnWidth = (gridWidth - (gap * (columnCount - 1))) / columnCount;
+            const columnHeights = Array(columnCount).fill(0);
+
+            cards.forEach((card) => {
+                card.style.width = `${columnWidth}px`;
+                card.style.left = '0px';
+                card.style.top = '0px';
+            });
+
+            cards.forEach((card) => {
+                const minHeight = Math.min(...columnHeights);
+                const targetColumn = columnHeights.indexOf(minHeight);
+                const x = targetColumn * (columnWidth + gap);
+                const y = minHeight;
+
+                card.style.left = `${x}px`;
+                card.style.top = `${y}px`;
+                columnHeights[targetColumn] = minHeight + card.offsetHeight + gap;
+            });
+
+            grid.style.height = `${Math.max(...columnHeights)}px`;
+        };
+
+        let resizeTimeout = null;
+        const relayout = () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(layoutMasonry, 100);
+        };
+
+        window.addEventListener('resize', relayout);
+
+        const images = grid.querySelectorAll('img');
+        let pendingImages = images.length;
+        if (pendingImages === 0) {
+            layoutMasonry();
+            return;
+        }
+
+        const onImageDone = () => {
+            pendingImages -= 1;
+            if (pendingImages <= 0) {
+                layoutMasonry();
+            }
+        };
+
+        images.forEach((img) => {
+            if (img.complete) {
+                onImageDone();
+            } else {
+                img.addEventListener('load', onImageDone, { once: true });
+                img.addEventListener('error', onImageDone, { once: true });
+            }
         });
     });
 </script>
