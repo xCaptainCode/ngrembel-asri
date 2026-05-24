@@ -1744,6 +1744,41 @@ class SettingsController extends Controller {
       return $this->response->redirect('settings/fasilitas');
    }
    public function galeriAction() {
+      $search = trim((string) $this->request->getQuery('search', 'string', ''));
+      $currentPage = (int) $this->request->getQuery('page', 'int', 1);
+      if ($currentPage < 1) {
+         $currentPage = 1;
+      }
+
+      $perPage = 10;
+      $bindParams = [];
+      $whereSql = '';
+      if ($search !== '') {
+         $whereSql = " WHERE (
+            g.title ILIKE :search
+            OR COALESCE(g.description, '') ILIKE :search
+            OR g.category ILIKE :search
+            OR g.type_media ILIKE :search
+         )";
+         $bindParams['search'] = '%' . $search . '%';
+      }
+
+      $countRow = $this->db->fetchOne(
+         "SELECT COUNT(*) AS total_items FROM gallery g" . $whereSql,
+         \Phalcon\Db::FETCH_ASSOC,
+         $bindParams
+      );
+      $totalItems = isset($countRow['total_items']) ? (int) $countRow['total_items'] : 0;
+      $totalPages = $totalItems > 0 ? (int) ceil($totalItems / $perPage) : 1;
+      if ($currentPage > $totalPages) {
+         $currentPage = $totalPages;
+      }
+
+      $offset = ($currentPage - 1) * $perPage;
+      $listBindParams = $bindParams;
+      $listBindParams['limit'] = $perPage;
+      $listBindParams['offset'] = $offset;
+
       $galleryList = $this->db->fetchAll(
          "SELECT g.*,
                 m_created.nama AS created_by_nama,
@@ -1751,11 +1786,19 @@ class SettingsController extends Controller {
           FROM gallery g
           LEFT JOIN members m_created ON CAST(g.create_by AS TEXT) = CAST(m_created.id AS TEXT)
           LEFT JOIN members m_updated ON CAST(g.update_by AS TEXT) = CAST(m_updated.id AS TEXT)
-          ORDER BY g.updated_at DESC NULLS LAST, g.created_at DESC NULLS LAST",
-         \Phalcon\Db::FETCH_ASSOC
+          {$whereSql}
+          ORDER BY g.updated_at DESC NULLS LAST, g.created_at DESC NULLS LAST
+          LIMIT :limit OFFSET :offset",
+         \Phalcon\Db::FETCH_ASSOC,
+         $listBindParams
       );
 
       $this->view->setVar('galleryList', $galleryList ?: []);
+      $this->view->setVar('searchQuery', $search);
+      $this->view->setVar('currentPage', $currentPage);
+      $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('totalItems', $totalItems);
+      $this->view->setVar('totalPages', $totalPages);
       $this->view->setVar('updateSuccess', $this->session->get('gallery_update_success'));
       $this->view->setVar('updateError', $this->session->get('gallery_update_error'));
       $this->session->remove('gallery_update_success');
