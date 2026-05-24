@@ -3,22 +3,22 @@
    <div class="footer-grid">
       <div>
          <div class="footer-brand-name">Ngrembel Asri</div>
-         <p class="footer-tagline">{{ get_val('tagline_footer', 'Ngrembel Asri — tempat keluarga menyatu dengan alam, merasakan ketenangan, dan menciptakan kenangan abadi.') }}</p>
+         <p class="footer-tagline">{{ get_setting('Tagline Footer', 'Ngrembel Asri — tempat keluarga menyatu dengan alam, merasakan ketenangan, dan menciptakan kenangan abadi.') }}</p>
          <div class="footer-social">
-            {% if get_val('link_instagram') != '' %}
-            <a href="{{ get_val('link_instagram', '#') }}" class="fsoc" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            {% if get_setting('Link Instagram') != '' %}
+            <a href="{{ get_setting('Link Instagram', '#') }}" class="fsoc" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
             {% endif %}
-            {% if get_val('link_tiktok') != '' %}
-            <a href="{{ get_val('link_tiktok', 'https://www.tiktok.com/@ngrembelasriofficial?_t=ZS-90kqpNZCsdE&_r=1') }}" class="fsoc" title="Tiktok"><i class="fa-brands fa-tiktok"></i></a>
+            {% if get_setting('Link Tiktok') != '' %} 
+            <a href="{{ get_setting('Link Tiktok', 'https://www.tiktok.com/@ngrembelasriofficial?_t=ZS-90kqpNZCsdE&_r=1') }}" class="fsoc" title="Tiktok"><i class="fa-brands fa-tiktok"></i></a>
             {% endif %}
-            {% if get_val('link_facebook') != '' %}
-            <a href="{{ get_val('link_facebook', 'https://www.facebook.com/ngrembelasriofficial/') }}" class="fsoc" title="Facebook"><i class="fa-brands fa-facebook"></i></a>
+            {% if get_setting('Link Facebook') != '' %}
+            <a href="{{ get_setting('Link Facebook', 'https://www.facebook.com/ngrembelasriofficial/') }}" class="fsoc" title="Facebook"><i class="fa-brands fa-facebook"></i></a>
             {% endif %}
-            {% if get_val('link_youtube') != '' %}
-            <a href="{{ get_val('link_youtube', 'https://www.youtube.com/@ngrembelasriofficial') }}" class="fsoc" title="Youtube"><i class="fa-brands fa-youtube"></i></a>
+            {% if get_setting('Link Youtube') != '' %}
+            <a href="{{ get_setting('Link Youtube', 'https://www.youtube.com/@ngrembelasriofficial') }}" class="fsoc" title="Youtube"><i class="fa-brands fa-youtube"></i></a>
             {% endif %}
-            {% if get_val('link_whatsapp') != '' %}
-            <a href="{{ get_val('link_whatsapp', 'https://wa.me/6285743460206') }}" class="fsoc" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            {% if get_setting('Link Whatsapp') != '' %}
+            <a href="{{ get_setting('Link Whatsapp', 'https://wa.me/6285743460206') }}" class="fsoc" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
             {% endif %}
          </div>
       </div>
