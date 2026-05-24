@@ -1,140 +1,170 @@
-<style>
-   :root {
-      --forest: #0d2416;
-      --deep: #152e1e;
-      --gold: #c8a84b;
-      --gold2: #e8cc7a;
-      --cream: #f5efe4;
-      --white: #ffffff;
-   }
+<!DOCTYPE html>
+<html lang="id">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Lupa Password - Ngrembel Asri</title>
+   
+   <!-- Meta SEO -->
+   <meta name="description" content="Informasi pemulihan password akun member Ngrembel Asri.">
+   <meta name="robots" content="noindex, nofollow">
+   
+   <!-- Google Fonts -->
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 
-   * {
-      box-sizing: border-box;
-   }
+   <style>
+      :root {
+         --forest: #0d2416;
+         --deep: #152e1e;
+         --gold: #c8a84b;
+         --gold2: #e8cc7a;
+         --cream: #f5efe4;
+         --white: #ffffff;
+         color-scheme: dark;
+      }
 
-   body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: 'Jost', sans-serif;
-      color: var(--cream);
-      background:
-         radial-gradient(circle at 15% 15%, rgba(200, 168, 75, .16), transparent 42%),
-         radial-gradient(circle at 85% 85%, rgba(94, 183, 120, .12), transparent 44%),
-         linear-gradient(165deg, var(--deep) 0%, var(--forest) 70%);
-   }
+      * {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+      }
 
-   .forgot-wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-   }
+      body {
+         font-family: 'Jost', sans-serif;
+         color: var(--cream);
+         background:
+            radial-gradient(circle at 15% 15%, rgba(200, 168, 75, .16), transparent 42%),
+            radial-gradient(circle at 85% 85%, rgba(94, 183, 120, .12), transparent 44%),
+            linear-gradient(165deg, var(--deep) 0%, var(--forest) 70%);
+         min-height: 100vh;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+      }
 
-   .forgot-card {
-      width: 100%;
-      max-width: 520px;
-      text-align: center;
-      background: rgba(255, 255, 255, .06);
-      border: 1px solid rgba(200, 168, 75, .28);
-      border-radius: 24px;
-      padding: 34px 28px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, .32);
-      backdrop-filter: blur(10px);
-   }
-
-   .forgot-title {
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0 0 10px;
-      color: var(--white);
-   }
-
-   .forgot-subtitle {
-      margin: 0 0 18px;
-      color: rgba(255, 255, 255, .82);
-      line-height: 1.6;
-   }
-
-   .forgot-help {
-      margin: 0 0 24px;
-      color: rgba(255, 255, 255, .7);
-      font-size: .95rem;
-   }
-
-   .forgot-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-   }
-
-   .btn-forgot {
-      border: none;
-      border-radius: 999px;
-      padding: 11px 22px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: transform .2s ease, box-shadow .2s ease;
-   }
-
-   .btn-forgot.primary {
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
-      color: var(--forest);
-      box-shadow: 0 8px 24px rgba(200, 168, 75, .38);
-   }
-
-   .btn-forgot.secondary {
-      background: rgba(255, 255, 255, .14);
-      color: var(--white);
-      border: 1px solid rgba(255, 255, 255, .28);
-   }
-
-   .btn-forgot:hover {
-      transform: translateY(-2px);
-   }
-
-   @media (max-width: 991px) {
       .forgot-wrap {
-         align-items: flex-start;
-         padding-top: 80px;
+         width: 100%;
+         max-width: 520px;
+         padding: 24px;
+         z-index: 2;
       }
 
       .forgot-card {
-         max-width: 620px;
+         width: 100%;
+         text-align: center;
+         background: rgba(255, 255, 255, .06);
+         border: 1px solid rgba(200, 168, 75, .28);
+         border-radius: 24px;
+         padding: 34px 28px;
+         box-shadow: 0 24px 60px rgba(0, 0, 0, .32);
+         backdrop-filter: blur(10px);
+         -webkit-backdrop-filter: blur(10px);
       }
-   }
 
-   @media (max-width: 767px) {
-      .forgot-wrap {
-         padding: 90px 16px 24px;
+      .forgot-title {
+         font-family: 'Cormorant Garamond', serif;
+         font-size: clamp(2rem, 5vw, 2.5rem);
+         font-weight: 700;
+         margin-bottom: 10px;
+         color: var(--white);
+      }
+
+      .forgot-subtitle {
+         margin-bottom: 18px;
+         color: rgba(255, 255, 255, .82);
+         line-height: 1.6;
+         font-size: 1rem;
+      }
+
+      .forgot-help {
+         margin-bottom: 24px;
+         color: rgba(255, 255, 255, .7);
+         font-size: .95rem;
+         line-height: 1.5;
       }
 
       .forgot-actions {
-         flex-direction: column;
+         display: flex;
+         gap: 12px;
+         justify-content: center;
+         flex-wrap: wrap;
       }
 
       .btn-forgot {
-         width: 100%;
-         padding: 13px 20px;
-         font-size: 1rem;
+         border: none;
+         border-radius: 999px;
+         padding: 11px 22px;
+         font-weight: 600;
+         text-decoration: none;
+         font-size: .85rem;
+         letter-spacing: 1.5px;
+         text-transform: uppercase;
+         transition: transform .2s ease, box-shadow .2s ease;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         gap: .5rem;
       }
-   }
-</style>
 
-<section class="forgot-wrap">
-   <div class="forgot-card">
-      <h1 class="forgot-title">Lupa Password?</h1>
-      <p class="forgot-subtitle">
-         Fitur reset password sedang dalam pengembangan.
-      </p>
-      <p class="forgot-help">
-         Silakan hubungi admin untuk bantuan reset akun Anda sementara waktu.
-      </p>
+      .btn-forgot.primary {
+         background: linear-gradient(135deg, var(--gold), var(--gold2));
+         color: var(--forest);
+         box-shadow: 0 8px 24px rgba(200, 168, 75, .38);
+      }
 
-      <div class="forgot-actions">
-         <a class="btn-forgot primary" href="{{ url('login') }}">Kembali ke Login</a>
-         <a class="btn-forgot secondary" href="{{ url('') }}"><span class="ti-home"></span> Home</a>
+      .btn-forgot.secondary {
+         background: rgba(255, 255, 255, .14);
+         color: var(--white);
+         border: 1px solid rgba(255, 255, 255, .28);
+      }
+
+      .btn-forgot:hover {
+         transform: translateY(-2px);
+      }
+
+      @media (max-width: 991px) {
+         .forgot-card {
+            max-width: 100%;
+         }
+      }
+
+      @media (max-width: 767px) {
+         .forgot-wrap {
+            padding: 90px 16px 24px;
+         }
+
+         .forgot-actions {
+            flex-direction: column;
+         }
+
+         .btn-forgot {
+            width: 100%;
+            padding: 13px 20px;
+            font-size: .9rem;
+         }
+      }
+   </style>
+</head>
+<body>
+
+   <section class="forgot-wrap">
+      <div class="forgot-card">
+         <h1 class="forgot-title">Lupa Password?</h1>
+         <p class="forgot-subtitle">
+            Fitur reset password sedang dalam pengembangan.
+         </p>
+         <p class="forgot-help">
+            Silakan hubungi admin untuk bantuan reset akun Anda sementara waktu.
+         </p>
+
+         <div class="forgot-actions">
+            <a class="btn-forgot primary" href="{{ url('login') }}">Kembali ke Login</a>
+            <a class="btn-forgot secondary" href="{{ url('') }}"><span class="ti-home"></span> Home</a>
+         </div>
       </div>
-   </div>
-</section>
+   </section>
+
+</body>
+</html>

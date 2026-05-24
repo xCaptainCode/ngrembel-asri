@@ -1,434 +1,503 @@
-<style>
-   :root {
-      --forest: #0d2416;
-      --deep: #152e1e;
-      --mid: #1e4d30;
-      --sage: #3a7d54;
-      --leaf: #5caa78;
-      --mint: #9fd4b3;
-      --cream: #f5efe4;
-      --parchment: #ede6d4;
-      --gold: #c8a84b;
-      --gold2: #e8cc7a;
-      --brown: #6b3a1f;
-      --white: #ffffff;
-      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-   }
+<!DOCTYPE html>
+<html lang="id">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Daftar Member - Ngrembel Asri</title>
+   
+   <!-- Meta SEO -->
+   <meta name="description" content="Bergabunglah dengan keluarga Ngrembel Asri untuk mendapatkan promo menarik.">
+   <meta name="robots" content="noindex, nofollow">
+   
+   <!-- Google Fonts -->
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 
-   *,
-   *::before,
-   *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0
-   }
+   <style>
+      :root {
+         --forest: #0d2416;
+         --deep: #152e1e;
+         --mid: #1e4d30;
+         --sage: #3a7d54;
+         --leaf: #5caa78;
+         --mint: #9fd4b3;
+         --cream: #f5efe4;
+         --parchment: #ede6d4;
+         --gold: #c8a84b;
+         --gold2: #e8cc7a;
+         --brown: #6b3a1f;
+         --white: #ffffff;
+         --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+         color-scheme: dark;
+      }
 
-   html {
-      scroll-behavior: smooth;
-      font-size: 16px
-   }
+      *,
+      *::before,
+      *::after {
+         box-sizing: border-box;
+         margin: 0;
+         padding: 0;
+      }
 
-   body {
-      font-family: 'Jost', sans-serif;
-      background: var(--forest);
-      color: var(--cream);
-      overflow-x: hidden;
-      cursor: basic;
-   }
+      html {
+         scroll-behavior: smooth;
+         font-size: 16px;
+      }
 
-   .overflow-hidden {
-      overflow: hidden !important;
-   }
+      body {
+         font-family: 'Jost', sans-serif;
+         background: var(--forest);
+         color: var(--cream);
+         overflow-x: hidden;
+         cursor: default;
+         min-height: 100vh;
+      }
 
-   /* ── NOISE OVERLAY ── */
-   body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%");
-      background-size: 128px;
-      opacity: .025;
-   }
+      .overflow-hidden {
+         overflow: hidden !important;
+      }
 
-   #auth-page {
-      padding: 120px 5% 4rem;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background:
-         radial-gradient(circle at 15% 15%, rgba(200, 168, 75, .13), transparent 42%),
-         radial-gradient(circle at 85% 85%, rgba(94, 183, 120, .12), transparent 44%),
-         linear-gradient(165deg, var(--deep) 0%, var(--forest) 70%);
-      position: relative;
-      overflow: hidden;
-   }
+      /* ── NOISE OVERLAY ── */
+      body::before {
+         content: '';
+         position: fixed;
+         inset: 0;
+         z-index: 1;
+         pointer-events: none;
+         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%");
+         background-size: 128px;
+         opacity: .025;
+      }
 
-   #auth-page::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(to bottom, rgba(13, 36, 22, .18), rgba(13, 36, 22, .6));
-   }
-
-   .auth-wrap {
-      width: 100%;
-      max-width: 460px;
-      position: relative;
-      z-index: 2;
-   }
-
-   .auth-card {
-      background: rgba(255, 255, 255, .04);
-      border: 1px solid rgba(200, 168, 75, .2);
-      border-radius: 24px;
-      padding: 2.2rem 2rem;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 24px 64px rgba(0, 0, 0, .35);
-   }
-
-   .auth-head {
-      text-align: center;
-      margin-bottom: 1.8rem;
-   }
-
-   .auth-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 5vw, 2.5rem);
-      line-height: 1.1;
-      margin-bottom: .5rem;
-   }
-
-   .auth-title em {
-      color: var(--gold2);
-      font-style: italic;
-   }
-
-   .auth-subtitle {
-      color: rgba(255, 255, 255, .68);
-      font-size: .92rem;
-   }
-
-   .auth-field {
-      margin-bottom: 1.05rem;
-   }
-
-   .auth-password-wrap {
-      position: relative;
-   }
-
-   .auth-label {
-      display: block;
-      margin-bottom: .45rem;
-      font-size: .62rem;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, .62);
-   }
-
-   .auth-input {
-      width: 100%;
-      border: 1px solid rgba(255, 255, 255, .14);
-      background: rgba(255, 255, 255, .06);
-      border-radius: 12px;
-      padding: .84rem 1rem;
-      color: #fff;
-      outline: none;
-      transition: border-color .25s, box-shadow .25s, background .25s;
-   }
-
-   .auth-input:focus {
-      border-color: rgba(232, 204, 122, .95);
-      box-shadow: 0 0 0 3px rgba(200, 168, 75, .16);
-      background: rgba(255, 255, 255, .08);
-   }
-
-   .auth-input::placeholder {
-      color: rgba(255, 255, 255, .38);
-   }
-
-   .auth-select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image:
-         linear-gradient(45deg, transparent 50%, rgba(232, 204, 122, .95) 50%),
-         linear-gradient(135deg, rgba(232, 204, 122, .95) 50%, transparent 50%);
-      background-position:
-         calc(100% - 18px) calc(50% - 3px),
-         calc(100% - 12px) calc(50% - 3px);
-      background-size: 6px 6px, 6px 6px;
-      background-repeat: no-repeat;
-      padding-right: 42px;
-      color: rgba(255, 255, 255, .88);
-   }
-
-   .auth-select option {
-      background: #163422;
-      color: #f5efe4;
-   }
-
-   .auth-password-toggle {
-      position: absolute;
-      top: 50%;
-      right: 12px;
-      transform: translateY(-50%);
-      width: 34px;
-      height: 34px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, .08);
-      color: rgba(255, 255, 255, .85);
-      cursor: pointer;
-   }
-
-   .auth-password-toggle svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-   }
-
-   .auth-submit {
-      margin-top: .55rem;
-      width: 100%;
-      border: none;
-      cursor: pointer;
-      justify-content: center;
-   }
-
-   .auth-foot {
-      text-align: center;
-      margin-top: 1.25rem;
-      color: rgba(255, 255, 255, .7);
-      font-size: .87rem;
-   }
-
-   .auth-foot a {
-      color: var(--gold2);
-      text-decoration: none;
-      font-weight: 600;
-   }
-
-   .auth-foot a:hover {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-   }
-
-   .btn-gold {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
-      color: var(--forest);
-      padding: .9rem 2.4rem;
-      border-radius: 40px;
-      font-weight: 600;
-      font-size: .85rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      text-decoration: none;
-      box-shadow: 0 8px 32px rgba(200, 168, 75, .4);
-      transition: transform .25s, box-shadow .25s;
-   }
-
-   .btn-gold:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 40px rgba(200, 168, 75, .55);
-   }
-
-   .mb-3 {
-      margin-bottom: 2rem !important;
-   }
-
-   .text-center {
-      text-align: center;
-   }
-
-   .justify-center {
-      display: flex;
-      justify-content: center;
-   }
-
-   .auth-wrap .nav-logo img {
-      width: min(350px, 78vw);
-      height: auto;
-   }
-
-   @media (max-width: 991px) {
       #auth-page {
-         padding: 105px 24px 40px;
+         padding: 120px 5% 4rem;
+         min-height: 100vh;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         background:
+            radial-gradient(circle at 15% 15%, rgba(200, 168, 75, .13), transparent 42%),
+            radial-gradient(circle at 85% 85%, rgba(94, 183, 120, .12), transparent 44%),
+            linear-gradient(165deg, var(--deep) 0%, var(--forest) 70%);
+         position: relative;
+         overflow: hidden;
+      }
+
+      #auth-page::before {
+         content: '';
+         position: absolute;
+         inset: 0;
+         pointer-events: none;
+         background: linear-gradient(to bottom, rgba(13, 36, 22, .18), rgba(13, 36, 22, .6));
       }
 
       .auth-wrap {
-         max-width: 560px;
+         width: 100%;
+         max-width: 640px; /* Lebar optimal untuk 2 kolom input pada desktop */
+         position: relative;
+         z-index: 2;
       }
 
       .auth-card {
-         padding: 2rem 1.6rem;
+         background: rgba(255, 255, 255, .04);
+         border: 1px solid rgba(200, 168, 75, .2);
+         border-radius: 24px;
+         padding: 2.2rem 2rem;
+         backdrop-filter: blur(12px);
+         -webkit-backdrop-filter: blur(12px);
+         box-shadow: 0 24px 64px rgba(0, 0, 0, .35);
       }
-   }
 
-   @media (max-width: 767px) {
-      #auth-page {
-         align-items: flex-start;
-         padding: 96px 16px 24px;
+      .auth-head {
+         text-align: center;
+         margin-bottom: 1.8rem;
       }
 
       .auth-title {
-         font-size: 2.2rem;
+         font-family: 'Cormorant Garamond', serif;
+         font-size: clamp(2rem, 5vw, 2.5rem);
+         line-height: 1.1;
+         margin-bottom: .5rem;
       }
 
-      .auth-label {
-         font-size: .78rem;
-         letter-spacing: 2px;
+      .auth-title em {
+         color: var(--gold2);
+         font-style: italic;
       }
 
       .auth-subtitle {
-         font-size: 1rem;
+         color: rgba(255, 255, 255, .68);
+         font-size: .92rem;
+         line-height: 1.4;
+      }
+
+      /* CSS GRID UNTUK FORM RESPONSIF */
+      .auth-grid {
+         display: grid;
+         grid-template-columns: 1fr;
+         gap: 1.05rem;
+         margin-bottom: 1.5rem;
+      }
+
+      @media (min-width: 600px) {
+         .auth-grid {
+            grid-template-columns: repeat(2, 1fr);
+            column-gap: 1.25rem;
+            row-gap: 1.05rem;
+         }
+
+         .grid-span-2 {
+            grid-column: span 2;
+         }
+      }
+
+      .auth-field {
+         margin-bottom: 0; /* Margin diatur oleh gap grid */
+      }
+
+      .auth-password-wrap {
+         position: relative;
+      }
+
+      .auth-label {
+         display: block;
+         margin-bottom: .45rem;
+         font-size: .62rem;
+         letter-spacing: 2.5px;
+         text-transform: uppercase;
+         color: rgba(255, 255, 255, .62);
       }
 
       .auth-input {
-         font-size: 1rem;
-         padding: 1rem 1rem;
+         width: 100%;
+         border: 1px solid rgba(255, 255, 255, .14);
+         background: rgba(255, 255, 255, .06);
+         border-radius: 12px;
+         padding: .84rem 1rem;
+         color: #fff;
+         outline: none;
+         font-family: 'Jost', sans-serif;
+         transition: border-color .25s, box-shadow .25s, background .25s;
+      }
+
+      .auth-input:focus {
+         border-color: rgba(232, 204, 122, .95);
+         box-shadow: 0 0 0 3px rgba(200, 168, 75, .16);
+         background: rgba(255, 255, 255, .08);
+      }
+
+      .auth-input::placeholder {
+         color: rgba(255, 255, 255, .38);
+      }
+
+      /* Date and Select Customization */
+      .auth-input[type="date"] {
+         color-scheme: dark;
+         height: 48px; /* Pastikan tinggi konsisten dengan text input */
+      }
+
+      .auth-select {
+         appearance: none;
+         -webkit-appearance: none;
+         -moz-appearance: none;
+         background-image:
+            linear-gradient(45deg, transparent 50%, rgba(232, 204, 122, .95) 50%),
+            linear-gradient(135deg, rgba(232, 204, 122, .95) 50%, transparent 50%);
+         background-position:
+            calc(100% - 18px) calc(50% - 3px),
+            calc(100% - 12px) calc(50% - 3px);
+         background-size: 6px 6px, 6px 6px;
+         background-repeat: no-repeat;
+         padding-right: 42px;
+         color: rgba(255, 255, 255, .88);
+         height: 48px;
+      }
+
+      .auth-select option {
+         background: #163422;
+         color: #f5efe4;
+      }
+
+      .auth-password-toggle {
+         position: absolute;
+         top: 50%;
+         right: 12px;
+         transform: translateY(-50%);
+         width: 34px;
+         height: 34px;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         border: none;
+         border-radius: 10px;
+         background: rgba(255, 255, 255, .08);
+         color: rgba(255, 255, 255, .85);
+         cursor: pointer;
+         transition: background .2s ease;
+      }
+
+      .auth-password-toggle:hover {
+         background: rgba(255, 255, 255, .14);
+      }
+
+      .auth-password-toggle svg {
+         width: 18px;
+         height: 18px;
+         stroke: currentColor;
+         fill: none;
+         stroke-width: 2;
+         stroke-linecap: round;
+         stroke-linejoin: round;
+      }
+
+      .auth-submit {
+         margin-top: .55rem;
+         width: 100%;
+         border: none;
+         cursor: pointer;
+         justify-content: center;
+      }
+
+      .auth-foot {
+         text-align: center;
+         margin-top: 1.25rem;
+         color: rgba(255, 255, 255, .7);
+         font-size: .87rem;
+      }
+
+      .auth-foot a {
+         color: var(--gold2);
+         text-decoration: none;
+         font-weight: 600;
+      }
+
+      .auth-foot a:hover {
+         text-decoration: underline;
+         text-underline-offset: 3px;
       }
 
       .btn-gold {
-         width: 100%;
-         padding: 1rem 1rem;
-         font-size: .92rem;
+         display: inline-flex;
+         align-items: center;
+         gap: .5rem;
+         background: linear-gradient(135deg, var(--gold), var(--gold2));
+         color: var(--forest);
+         padding: .9rem 2.4rem;
+         border-radius: 40px;
+         font-weight: 600;
+         font-size: .85rem;
+         letter-spacing: 1.5px;
+         text-transform: uppercase;
+         text-decoration: none;
+         box-shadow: 0 8px 32px rgba(200, 168, 75, .4);
+         transition: transform .25s, box-shadow .25s;
       }
-   }
-</style>
 
-<section id="auth-page">
-   <div class="auth-wrap r">
-      <div class="justify-center mb-3">
-         <a href="{{ url('') }}" class="nav-logo text-center">
-            <img src="{{ url('images/logo-white.png') }}" alt="Logo Ngrembel Asri" width="350px">
-         </a>
-      </div>
-      <div class="auth-card">
-         <div class="auth-head">
-            <h2 class="auth-title">Daftar <em>Member</em></h2>
-            <p class="auth-subtitle">Bergabunglah dengan keluarga Ngrembel Asri</p>
-            <p class="auth-subtitle">Untuk mendapatkan promo menarik</p>
+      .btn-gold:hover {
+         transform: translateY(-3px);
+         box-shadow: 0 14px 40px rgba(200, 168, 75, .55);
+      }
+
+      .mb-3 {
+         margin-bottom: 2rem !important;
+      }
+
+      .text-center {
+         text-align: center;
+      }
+
+      .justify-center {
+         display: flex;
+         justify-content: center;
+      }
+
+      .auth-wrap .nav-logo img {
+         width: min(350px, 78vw);
+         height: auto;
+      }
+
+      @media (max-width: 991px) {
+         #auth-page {
+            padding: 105px 24px 40px;
+         }
+
+         .auth-wrap {
+            max-width: 560px;
+         }
+
+         .auth-card {
+            padding: 2rem 1.6rem;
+         }
+      }
+
+      @media (max-width: 767px) {
+         #auth-page {
+            align-items: flex-start;
+            padding: 96px 16px 24px;
+            width: 100%;
+         }
+
+         .auth-title {
+            font-size: 2.2rem;
+         }
+
+         .auth-label {
+            font-size: .78rem;
+            letter-spacing: 2px;
+         }
+
+         .auth-subtitle {
+            font-size: 1rem;
+         }
+
+         .auth-input {
+            font-size: 1rem;
+            padding: 1rem 1rem;
+         }
+
+         .btn-gold {
+            width: 100%;
+            padding: 1rem 1rem;
+            font-size: .92rem;
+         }
+      }
+
+      @media (max-width: 576px) {
+         .auth-card {
+            width: 100%;
+            border-radius: 20px;
+            padding: 2rem 1.3rem;
+         }
+
+         .auth-foot {
+            font-size: .95rem;
+         }
+      }
+   </style>
+</head>
+<body>
+
+   <section id="auth-page">
+      <div class="auth-wrap">
+         <div class="justify-center mb-3">
+            <a href="{{ url('') }}" class="nav-logo text-center">
+               <img src="{{ url('images/logo-white.png') }}" alt="Logo Ngrembel Asri" width="350px">
+            </a>
          </div>
-
-         <form action="{{ url('registrasi/proses_registrasi') }}" method="POST">
-            <div class="auth-field">
-               <label class="auth-label" for="name">Nama Lengkap</label>
-               <input class="auth-input" id="name" type="text" name="name" required placeholder="Masukkan nama lengkap">
+         <div class="auth-card">
+            <div class="auth-head">
+               <h1 class="auth-title">Daftar <em>Member</em></h1>
+               <p class="auth-subtitle">Bergabunglah dengan keluarga Ngrembel Asri<br>untuk mendapatkan promo menarik</p>
             </div>
 
-            <div class="auth-field">
-               <label class="auth-label" for="no_hp">No Telepon</label>
-               <input class="auth-input" id="no_hp" type="numeric" name="no_hp" required
-                  placeholder="Masukkan no telepon">
-            </div>
+            <form action="{{ url('registrasi/proses_registrasi') }}" method="POST">
+               <div class="auth-grid">
+                  
+                  <div class="auth-field grid-span-2">
+                     <label class="auth-label" for="name">Nama Lengkap</label>
+                     <input class="auth-input" id="name" type="text" name="name" required placeholder="Masukkan nama lengkap">
+                  </div>
 
-            <div class="auth-field">
-               <label class="auth-label" for="email">Email</label>
-               <input class="auth-input" id="email" type="email" name="email" required placeholder="Masukkan email">
-            </div>
+                  <div class="auth-field">
+                     <label class="auth-label" for="no_hp">No Telepon</label>
+                     <input class="auth-input" id="no_hp" type="tel" name="no_hp" required
+                        placeholder="Masukkan no telepon">
+                  </div>
 
-            <!-- tgl lahir -->
-            <div class="auth-field">
-               <label class="auth-label" for="tgl_lahir">Tanggal Lahir</label>
-               <input class="auth-input" id="tgl_lahir" type="date" name="tgl_lahir" required>
-            </div>
+                  <div class="auth-field">
+                     <label class="auth-label" for="email">Email</label>
+                     <input class="auth-input" id="email" type="email" name="email" required placeholder="Masukkan email">
+                  </div>
 
-            <!-- gender -->
-            <div class="auth-field">
-               <label class="auth-label" for="gender">Jenis Kelamin</label>
-               <select class="auth-input auth-select" id="gender" name="gender" required>
-                  <option value="">Pilih Jenis Kelamin</option>
-                  <option value="L">Laki-laki</option>
-                  <option value="P">Perempuan</option>
-               </select>
-            </div>
+                  <div class="auth-field">
+                     <label class="auth-label" for="tgl_lahir">Tanggal Lahir</label>
+                     <input class="auth-input" id="tgl_lahir" type="date" name="tgl_lahir" required>
+                  </div>
 
-            <!-- kota -->
-            <div class="auth-field">
-               <label class="auth-label" for="kota">Kota</label>
-               <input class="auth-input" id="kota" type="text" name="kota" required placeholder="Masukkan kota">
-            </div>
+                  <div class="auth-field">
+                     <label class="auth-label" for="gender">Jenis Kelamin</label>
+                     <select class="auth-input auth-select" id="gender" name="gender" required>
+                        <option value="">Pilih Jenis Kelamin</option>
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                     </select>
+                  </div>
 
-            <!-- alamat -->
-            <div class="auth-field">
-               <label class="auth-label" for="alamat">Alamat</label>
-               <input class="auth-input" id="alamat" type="text" name="alamat" required placeholder="Masukkan alamat">
-            </div>
+                  <div class="auth-field">
+                     <label class="auth-label" for="kota">Kota</label>
+                     <input class="auth-input" id="kota" type="text" name="kota" required placeholder="Masukkan kota">
+                  </div>
 
-            <!-- password -->
-            <div class="auth-field">
-               <label class="auth-label" for="password">Password</label>
-               <div class="auth-password-wrap">
-                  <input class="auth-input" id="password" type="password" name="password" required
-                     placeholder="Masukkan password">
-                  <button type="button" class="auth-password-toggle" id="togglePassword"
-                     aria-label="Tampilkan password">
-                     <svg id="eyeOpen" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                     </svg>
-                     <svg id="eyeClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
-                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.77 21.77 0 0 1 5.06-5.94">
-                        </path>
-                        <path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-3.22 4.22"></path>
-                        <path d="M1 1l22 22"></path>
-                     </svg>
-                  </button>
+                  <div class="auth-field">
+                     <label class="auth-label" for="alamat">Alamat</label>
+                     <input class="auth-input" id="alamat" type="text" name="alamat" required placeholder="Masukkan alamat">
+                  </div>
+
+                  <div class="auth-field grid-span-2">
+                     <label class="auth-label" for="password">Password</label>
+                     <div class="auth-password-wrap">
+                        <input class="auth-input" id="password" type="password" name="password" required
+                           placeholder="Masukkan password">
+                        <button type="button" class="auth-password-toggle" id="togglePassword"
+                           aria-label="Tampilkan password">
+                           <svg id="eyeOpen" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                           </svg>
+                           <svg id="eyeClosed" viewBox="0 0 24 24" aria-hidden="true" style="display:none;">
+                              <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.77 21.77 0 0 1 5.06-5.94">
+                              </path>
+                              <path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-3.22 4.22"></path>
+                              <path d="M1 1l22 22"></path>
+                           </svg>
+                        </button>
+                     </div>
+                  </div>
+                  
                </div>
+
+               <button type="submit" class="btn-gold auth-submit">Daftar Sekarang</button>
+            </form>
+
+            <div class="auth-foot">
+               Sudah punya akun? <a href="{{ url('login') }}">Masuk</a>
             </div>
-
-            <button type="submit" class="btn-gold auth-submit">Daftar Sekarang</button>
-         </form>
-
-         <div class="auth-foot">
-            Sudah punya akun? <a href="{{ url('login') }}">Masuk</a>
          </div>
       </div>
-   </div>
-</section>
+   </section>
 
-<script>
-   (function () {
-      const passwordInput = document.getElementById('password');
-      const toggleButton = document.getElementById('togglePassword');
-      const eyeOpen = document.getElementById('eyeOpen');
-      const eyeClosed = document.getElementById('eyeClosed');
+   <script>
+      (function () {
+         const passwordInput = document.getElementById('password');
+         const toggleButton = document.getElementById('togglePassword');
+         const eyeOpen = document.getElementById('eyeOpen');
+         const eyeClosed = document.getElementById('eyeClosed');
 
-      if (!passwordInput || !toggleButton) return;
+         if (!passwordInput || !toggleButton) return;
 
-      toggleButton.addEventListener('click', function () {
-         const isPassword = passwordInput.getAttribute('type') === 'password';
-         passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-         eyeOpen.style.display = isPassword ? 'none' : 'block';
-         eyeClosed.style.display = isPassword ? 'block' : 'none';
-         toggleButton.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
+         toggleButton.addEventListener('click', function () {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            eyeOpen.style.display = isPassword ? 'none' : 'block';
+            eyeClosed.style.display = isPassword ? 'block' : 'none';
+            toggleButton.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
+         });
+      })();
+   </script>
+   
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   {% if session.has('login_error') %}
+   <script>
+      Swal.fire({
+         icon: 'error',
+         title: 'Login Gagal',
+         text: '{{ session.get("login_error") }}',
+         confirmButtonColor: '#c8a84b'
       });
-   })();
+   </script>
+   {% do session.remove('login_error') %}
+   {% endif %}
 
-</script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-{% if session.has('login_error') %}
-<script>
-   Swal.fire({
-      icon: 'error',
-      title: 'Login Gagal',
-      text: '{{ session.get("login_error") }}',
-      confirmButtonColor: '#c8a84b'
-   });
-</script>
-{% do session.remove('login_error') %}
-{% endif %}
+</body>
+</html>
