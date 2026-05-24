@@ -410,5 +410,17 @@
    {% do session.remove('login_error') %}
    {% endif %}
 
+   {% if session.has('registrasi_success') %}
+   <script>
+      Swal.fire({
+         icon: 'success',
+         title: 'Pendaftaran Sukses',
+         text: '{{ session.get("registrasi_success") }}',
+         confirmButtonColor: '#c8a84b'
+      });
+   </script>
+   {% do session.remove('registrasi_success') %}
+   {% endif %}
+
 </body>
 </html>

@@ -12,6 +12,222 @@ class SettingsController extends Controller {
       return true;
    }
 
+   public function memberAction() {
+      // Ambil daftar seluruh member
+      $members = $this->db->fetchAll(
+         "SELECT * FROM members ORDER BY nama ASC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      // Hitung jumlah pendaftaran baru dengan status 'pending'
+      $pendingCountResult = $this->db->fetchOne(
+         "SELECT COUNT(*) AS total FROM registrasi WHERE status = 'pending'",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+      $pendingCount = $pendingCountResult ? (int) $pendingCountResult['total'] : 0;
+
+      $this->view->setVar('members', $members ?: []);
+      $this->view->setVar('pendingCount', $pendingCount);
+      $this->view->setVar('updateSuccess', $this->session->get('member_update_success'));
+      $this->view->setVar('updateError', $this->session->get('member_update_error'));
+      $this->session->remove('member_update_success');
+      $this->session->remove('member_update_error');
+   }
+
+   public function update_memberAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/member');
+      }
+
+      $id = trim((string) $this->request->getPost('id', 'string'));
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $email = trim((string) $this->request->getPost('email', 'email'));
+      $noHp = trim((string) $this->request->getPost('no_hp', 'string'));
+      $role = trim((string) $this->request->getPost('role', 'string'));
+      $isActiveVal = trim((string) $this->request->getPost('is_active', 'string'));
+
+      if ($id === '' || $nama === '' || $email === '' || $noHp === '' || !in_array($role, ['admin', 'member'], true)) {
+         $this->session->set('member_update_error', 'Data input member tidak valid.');
+         return $this->response->redirect('settings/member');
+      }
+
+      $isActive = ($isActiveVal === '1');
+
+      try {
+         // Cek duplikasi email atau no_hp di members lain
+         $duplicate = $this->db->fetchOne(
+            "SELECT id FROM members WHERE (email = :email OR no_hp = :no_hp) AND id <> :id LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['email' => $email, 'no_hp' => $noHp, 'id' => $id]
+         );
+
+         if ($duplicate) {
+            $this->session->set('member_update_error', 'Gagal memperbarui: Email atau No HP sudah terdaftar pada member lain.');
+            return $this->response->redirect('settings/member');
+         }
+
+         // Update data member
+         $this->db->execute(
+            "UPDATE members
+             SET nama = :nama,
+                 email = :email,
+                 no_hp = :no_hp,
+                 role = :role,
+                 is_active = :is_active
+             WHERE id = :id",
+            [
+               'nama' => $nama,
+               'email' => $email,
+               'no_hp' => $noHp,
+               'role' => $role,
+               'is_active' => $isActive ? 'TRUE' : 'FALSE',
+               'id' => $id
+            ]
+         );
+
+         $this->session->set('member_update_success', "Data member {$nama} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('member_update_error', 'Gagal memperbarui data member: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/member');
+   }
+
+   public function registrasiAction() {
+      // Ambil daftar seluruh pendaftaran dengan status 'pending'
+      $pendingList = $this->db->fetchAll(
+         "SELECT * FROM registrasi WHERE status = 'pending' ORDER BY tgl_daftar DESC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('pendingList', $pendingList ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('registrasi_update_success'));
+      $this->view->setVar('updateError', $this->session->get('registrasi_update_error'));
+      $this->session->remove('registrasi_update_success');
+      $this->session->remove('registrasi_update_error');
+   }
+
+   public function approve_registrasiAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/registrasi');
+      }
+
+      $id = trim((string) $this->request->getPost('id', 'string'));
+
+      if ($id === '') {
+         $this->session->set('registrasi_update_error', 'ID pendaftaran tidak valid.');
+         return $this->response->redirect('settings/registrasi');
+      }
+
+      try {
+         $this->db->begin();
+
+         // Ambil data pendaftaran
+         $reg = $this->db->fetchOne(
+            "SELECT * FROM registrasi WHERE id = :id AND status = 'pending' LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['id' => $id]
+         );
+
+         if (! $reg) {
+            $this->db->rollback();
+            $this->session->set('registrasi_update_error', 'Data pendaftaran tidak ditemukan atau sudah diproses.');
+            return $this->response->redirect('settings/registrasi');
+         }
+
+         // Cek apakah email/no_hp duplikat di members
+         $dupMember = $this->db->fetchOne(
+            "SELECT id FROM members WHERE email = :email OR no_hp = :no_hp LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['email' => $reg['email'], 'no_hp' => $reg['no_hp']]
+         );
+
+         if ($dupMember) {
+            $this->db->rollback();
+            $this->session->set('registrasi_update_error', 'Gagal menyetujui: Email atau No HP pendaftar sudah terdaftar di tabel member.');
+            return $this->response->redirect('settings/registrasi');
+         }
+
+         $adminId = $this->session->get('id');
+
+         // 1. Update status registrasi menjadi 'active'
+         $this->db->execute(
+            "UPDATE registrasi 
+             SET status = 'active', 
+                 is_active = TRUE, 
+                 updated_at = NOW(), 
+                 updated_by = :admin_id 
+             WHERE id = :id",
+            ['id' => $id, 'admin_id' => $adminId]
+         );
+
+         // 2. Masukkan ke tabel members (kata sandi sudah di-hash dari registrasi)
+         $this->db->execute(
+            "INSERT INTO members (nama, no_hp, email, tgl_lahir, gender, kota, alamat, password, is_active, role, tgl_daftar)
+             VALUES (:nama, :no_hp, :email, :tgl_lahir, :gender, :kota, :alamat, :password, TRUE, :role, NOW())",
+            [
+               'nama' => $reg['nama'],
+               'no_hp' => $reg['no_hp'],
+               'email' => $reg['email'],
+               'tgl_lahir' => $reg['tgl_lahir'],
+               'gender' => $reg['gender'],
+               'kota' => $reg['kota'],
+               'alamat' => $reg['alamat'],
+               'password' => $reg['password'],
+               'role' => $reg['role'] ?: 'member'
+            ]
+         );
+
+         $this->db->commit();
+         $this->session->set('registrasi_update_success', "Pendaftaran {$reg['nama']} berhasil disetujui (ACC) dan diaktifkan sebagai member baru.");
+      } catch (\Throwable $e) {
+         $this->db->rollback();
+         $this->session->set('registrasi_update_error', 'Gagal memproses persetujuan pendaftaran: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/registrasi');
+   }
+
+   public function reject_registrasiAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/registrasi');
+      }
+
+      $id = trim((string) $this->request->getPost('id', 'string'));
+
+      if ($id === '') {
+         $this->session->set('registrasi_update_error', 'ID pendaftaran tidak valid.');
+         return $this->response->redirect('settings/registrasi');
+      }
+
+      try {
+         $adminId = $this->session->get('id');
+
+         // Update status registrasi menjadi 'inactive'
+         $this->db->execute(
+            "UPDATE registrasi 
+             SET status = 'inactive', 
+                 is_active = FALSE, 
+                 updated_at = NOW(), 
+                 updated_by = :admin_id 
+             WHERE id = :id",
+            ['id' => $id, 'admin_id' => $adminId]
+         );
+
+         $this->session->set('registrasi_update_success', "Pendaftaran berhasil ditolak (status diubah menjadi inactive).");
+      } catch (\Throwable $e) {
+         $this->session->set('registrasi_update_error', 'Gagal memproses penolakan pendaftaran: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/registrasi');
+   }
+
    public function dashboardAction() {
       $dashboard = $this->db->fetchAll(
          "SELECT s.*,

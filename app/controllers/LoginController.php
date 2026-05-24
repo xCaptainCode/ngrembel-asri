@@ -104,7 +104,8 @@ class LoginController extends \Phalcon\Mvc\Controller {
       }
 
       try {
-         $existing = Member::findFirst([
+         // Cek apakah sudah terdaftar di members
+         $existingMember = Member::findFirst([
             'conditions' => 'email = :email: OR no_hp = :no_hp:',
             'bind' => [
                'email' => $email,
@@ -112,13 +113,29 @@ class LoginController extends \Phalcon\Mvc\Controller {
             ],
          ]);
 
-         if ($existing) {
-            $this->session->set('login_error', 'Registrasi gagal: email atau nomor telepon sudah terdaftar.');
+         if ($existingMember) {
+            $this->session->set('login_error', 'Registrasi gagal: email atau nomor telepon sudah terdaftar sebagai member.');
             return $this->response->redirect('registrasi');
          }
 
-         $sql = "INSERT INTO members (nama, no_hp, email, tgl_lahir, gender, kota, alamat, password, is_active)
-                 VALUES (:nama, :no_hp, :email, :tgl_lahir, :gender, :kota, :alamat, crypt(:password, gen_salt('bf')), TRUE)";
+         // Cek apakah ada pendaftaran dengan email/no_hp yang sama berstatus pending
+         $existingReg = Registrasi::findFirst([
+            'conditions' => '(email = :email: OR no_hp = :no_hp:) AND status = :status:',
+            'bind' => [
+               'email' => $email,
+               'no_hp' => $noHp,
+               'status' => 'pending',
+            ],
+         ]);
+
+         if ($existingReg) {
+            $this->session->set('login_error', 'Registrasi gagal: email atau nomor telepon sudah diajukan dan sedang menunggu persetujuan admin.');
+            return $this->response->redirect('registrasi');
+         }
+
+         // Masukkan ke tabel registrasi dengan status 'pending', role 'member', is_active = TRUE
+         $sql = "INSERT INTO registrasi (nama, no_hp, email, tgl_lahir, gender, kota, alamat, password, status, role, is_active)
+                 VALUES (:nama, :no_hp, :email, :tgl_lahir, :gender, :kota, :alamat, crypt(:password, gen_salt('bf')), 'pending', 'member', TRUE)";
 
          $this->db->execute($sql, [
             'nama' => $nama,
@@ -130,6 +147,8 @@ class LoginController extends \Phalcon\Mvc\Controller {
             'alamat' => $alamat,
             'password' => $password,
          ]);
+
+         $this->session->set('registrasi_success', 'Pendaftaran berhasil dikirim! Akun Anda sedang ditinjau oleh Admin. Silakan tunggu hingga diaktifkan.');
       } catch (\Throwable $e) {
          $this->session->set('login_error', 'Registrasi gagal: ' . $e->getMessage());
          return $this->response->redirect('registrasi');
