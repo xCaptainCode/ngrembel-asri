@@ -2545,5 +2545,108 @@ class SettingsController extends Controller {
       return $this->response->send();
    }
 
-   public function kritik_saranAction() {}
+   
+
+   public function kritik_saranAction() {
+      $items = $this->db->fetchAll(
+         "SELECT ks.*, m.nama AS admin_nama 
+          FROM kritik_saran ks 
+          LEFT JOIN members m ON CAST(ks.responded_by AS TEXT) = CAST(m.id AS TEXT) 
+          ORDER BY ks.created_at DESC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('items', $items ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('krisa_update_success'));
+      $this->view->setVar('updateError', $this->session->get('krisa_update_error'));
+      $this->session->remove('krisa_update_success');
+      $this->session->remove('krisa_update_error');
+   }
+
+   public function update_kritik_saranAction() {
+      $this->view->disable();
+
+      if (!$this->request->isPost()) {
+         return $this->response->redirect('settings/kritik_saran');
+      }
+
+      $id = trim((string) $this->request->getPost('id', 'string'));
+      $response = trim((string) $this->request->getPost('response', 'string'));
+      $isPublishedVal = trim((string) $this->request->getPost('is_published', 'string'));
+
+      if ($id === '' || !in_array($isPublishedVal, ['0', '1'], true)) {
+         $this->session->set('krisa_update_error', 'Data input tidak valid.');
+         return $this->response->redirect('settings/kritik_saran');
+      }
+
+      $isPublished = ($isPublishedVal === '1');
+      $adminId = $this->session->get('id');
+
+      try {
+         // Ambil data lama untuk memeriksa apakah response berubah
+         $existing = $this->db->fetchOne(
+            "SELECT response FROM kritik_saran WHERE id = :id LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['id' => $id]
+         );
+
+         if (!$existing) {
+            $this->session->set('krisa_update_error', 'Data kritik dan saran tidak ditemukan.');
+            return $this->response->redirect('settings/kritik_saran');
+         }
+
+         $oldResponse = isset($existing['response']) ? trim((string)$existing['response']) : '';
+
+         if ($response === '') {
+            // Hapus tanggapan
+            $this->db->execute(
+               "UPDATE kritik_saran 
+                SET response = NULL,
+                    responded_at = NULL,
+                    responded_by = NULL,
+                    is_published = :is_published
+                WHERE id = :id",
+               [
+                  'is_published' => $isPublished ? 'TRUE' : 'FALSE',
+                  'id' => $id
+               ]
+            );
+         } else {
+            // Tulis/ubah tanggapan. Update tanggal & admin penginput hanya jika tanggapannya berubah
+            if ($response !== $oldResponse) {
+               $this->db->execute(
+                  "UPDATE kritik_saran 
+                   SET response = :response,
+                       responded_at = NOW(),
+                       responded_by = :responded_by,
+                       is_published = :is_published
+                   WHERE id = :id",
+                  [
+                     'response' => $response,
+                     'responded_by' => $adminId,
+                     'is_published' => $isPublished ? 'TRUE' : 'FALSE',
+                     'id' => $id
+                  ]
+               );
+            } else {
+               // Update status publikasi saja
+               $this->db->execute(
+                  "UPDATE kritik_saran 
+                   SET is_published = :is_published
+                   WHERE id = :id",
+                  [
+                     'is_published' => $isPublished ? 'TRUE' : 'FALSE',
+                     'id' => $id
+                  ]
+               );
+            }
+         }
+
+         $this->session->set('krisa_update_success', 'Data kritik dan saran berhasil diperbarui.');
+      } catch (\Throwable $e) {
+         $this->session->set('krisa_update_error', 'Gagal memperbarui data: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/kritik_saran');
+   }
 }

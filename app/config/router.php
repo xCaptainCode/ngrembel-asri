@@ -68,6 +68,12 @@ $router->add("/kritiksaran",
         "action"     => "index",
     ]
 );
+$router->add("/kritiksaran/loadMore",
+    [
+        "controller" => "kritiksaran",
+        "action"     => "loadMore",
+    ]
+);
 $router->add("/settings/:action",
     [
         "controller" => "settings",

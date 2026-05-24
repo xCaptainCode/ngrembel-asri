@@ -33,7 +33,7 @@
             </svg>
          </a>
          <ul class="nav-submenu" id="settingsSubmenu">
-            <li class="{{ this.request.getURI() == url('settings/member') ? 'active' : '' }}"><a href="{{ url('settings/member') }}">Member</a></li>
+            <li class="{{ this.request.getURI() == url('settings/member') ? 'active' : '' }}"><a href="{{ url('settings/member') }}">Member <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/dashboard') ? 'active' : '' }}"><a href="{{ url('settings/dashboard') }}">Dashboard <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/price_list') ? 'active' : '' }}"><a href="{{ url('settings/price_list') }}">Price List <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/permainan') ? 'active' : '' }}"><a href="{{ url('settings/permainan') }}">Permainan <i class="fas fa-check-circle"></i></a></li>
