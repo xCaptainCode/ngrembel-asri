@@ -1595,7 +1595,154 @@ class SettingsController extends Controller {
       return $this->response->redirect('settings/mini_zoo');
    }
 
-   public function fasilitasAction() {}
+   public function fasilitasAction() {
+      $fasilitasList = $this->db->fetchAll(
+         "SELECT f.*,
+                m_created.nama AS created_by_nama,
+                m_updated.nama AS updated_by_nama
+          FROM fasilitas f
+          LEFT JOIN members m_created ON CAST(f.created_by AS TEXT) = CAST(m_created.id AS TEXT)
+          LEFT JOIN members m_updated ON CAST(f.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
+          ORDER BY nama ASC, created_at DESC",
+         \Phalcon\Db::FETCH_ASSOC
+      );
+
+      $this->view->setVar('fasilitasList', $fasilitasList ?: []);
+      $this->view->setVar('updateSuccess', $this->session->get('fasilitas_update_success'));
+      $this->view->setVar('updateError', $this->session->get('fasilitas_update_error'));
+      $this->session->remove('fasilitas_update_success');
+      $this->session->remove('fasilitas_update_error');
+   }
+
+   public function update_fasilitasAction() {
+      $this->view->disable();
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/fasilitas');
+      }
+
+      $id = (string) $this->request->getPost('id', 'string');
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($nama === '') {
+         $this->session->set('fasilitas_update_error', 'Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/fasilitas');
+      }
+
+      try {
+         if ($id === '') {
+            $this->session->set('fasilitas_update_error', 'ID fasilitas tidak valid.');
+            return $this->response->redirect('settings/fasilitas');
+         }
+
+         $existingFasilitas = $this->db->fetchOne(
+            "SELECT img_url FROM fasilitas WHERE id = :id LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['id' => $id]
+         );
+         if (! $existingFasilitas) {
+            $this->session->set('fasilitas_update_error', 'Data fasilitas tidak ditemukan.');
+            return $this->response->redirect('settings/fasilitas');
+         }
+
+         $newImgUrl = trim((string) $this->request->getPost('img_url', 'string'));
+         if ($newImgUrl === '') {
+            $newImgUrl = (string) ($existingFasilitas['img_url'] ?? '');
+         } else {
+            if (strpos($newImgUrl, 'images/fasilitas/') !== 0 || strpos($newImgUrl, '..') !== false) {
+               $this->session->set('fasilitas_update_error', 'Path foto fasilitas tidak valid.');
+               return $this->response->redirect('settings/fasilitas');
+            }
+
+            if (! file_exists(BASE_PATH . '/public/' . $newImgUrl)) {
+               $this->session->set('fasilitas_update_error', 'File foto fasilitas tidak ditemukan di server.');
+               return $this->response->redirect('settings/fasilitas');
+            }
+         }
+
+         if ($newImgUrl === '') {
+            $this->session->set('fasilitas_update_error', 'Foto fasilitas wajib diupload.');
+            return $this->response->redirect('settings/fasilitas');
+         }
+
+         $sql = "UPDATE fasilitas
+               SET nama = :nama,
+                   deskripsi = :deskripsi,
+                   img_url = :img_url,
+                   is_active = :is_active,
+                   updated_at = NOW(),
+                   updated_by = :updated_by
+               WHERE id = :id";
+
+         $this->db->execute($sql, [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi === '' ? null : $deskripsi,
+            'img_url' => $newImgUrl,
+            'is_active' => $is_active ? 'true' : 'false',
+            'updated_by' => (string) $this->session->get('id'),
+            'id' => $id,
+         ]);
+
+         $this->session->set('fasilitas_update_success', "Data fasilitas {$nama} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('fasilitas_update_error', 'Gagal memperbarui fasilitas: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/fasilitas');
+   }
+
+   public function create_fasilitasAction() {
+      $this->view->disable();
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/fasilitas');
+      }
+
+      $nama = trim((string) $this->request->getPost('nama', 'string'));
+      $deskripsi = trim((string) $this->request->getPost('deskripsi', 'string'));
+      $is_active = $this->request->getPost('is_active') ? true : false;
+
+      if ($nama === '') {
+         $this->session->set('fasilitas_update_error', 'Nama tidak boleh kosong.');
+         return $this->response->redirect('settings/fasilitas');
+      }
+
+      try {
+         $newImgUrl = trim((string) $this->request->getPost('img_url', 'string'));
+         if ($newImgUrl === '') {
+            $this->session->set('fasilitas_update_error', 'Foto fasilitas wajib diupload terlebih dahulu.');
+            return $this->response->redirect('settings/fasilitas');
+         }
+
+         if (strpos($newImgUrl, 'images/fasilitas/') !== 0 || strpos($newImgUrl, '..') !== false) {
+            $this->session->set('fasilitas_update_error', 'Path foto fasilitas tidak valid.');
+            return $this->response->redirect('settings/fasilitas');
+         }
+
+         if (! file_exists(BASE_PATH . '/public/' . $newImgUrl)) {
+            $this->session->set('fasilitas_update_error', 'File foto fasilitas tidak ditemukan di server.');
+            return $this->response->redirect('settings/fasilitas');
+         }
+
+         $sql = "INSERT INTO fasilitas (nama, deskripsi, img_url, is_active, created_at, created_by, updated_at, updated_by)
+                 VALUES (:nama, :deskripsi, :img_url, :is_active, NOW(), :created_by, NOW(), :updated_by)";
+
+         $this->db->execute($sql, [
+            'nama' => $nama,
+            'deskripsi' => $deskripsi === '' ? null : $deskripsi,
+            'img_url' => $newImgUrl,
+            'is_active' => $is_active ? 'true' : 'false',
+            'created_by' => (string) $this->session->get('id'),
+            'updated_by' => (string) $this->session->get('id'),
+         ]);
+
+         $this->session->set('fasilitas_update_success', "Fasilitas {$nama} berhasil ditambahkan.");
+      } catch (\Throwable $e) {
+         $this->session->set('fasilitas_update_error', 'Gagal menambahkan fasilitas baru: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/fasilitas');
+   }
    public function galeriAction() {
       $galleryList = $this->db->fetchAll(
          "SELECT g.*,
@@ -2041,6 +2188,131 @@ class SettingsController extends Controller {
       }
 
       $tempDir = sys_get_temp_dir() . '/minizoo_chunks/' . $uploadId;
+      if (! is_dir($tempDir)) {
+         mkdir($tempDir, 0750, true);
+      }
+
+      file_put_contents($tempDir . '/meta.json', json_encode(['extension' => $extension]));
+
+      return $this->jsonResponse(['success' => true]);
+   }
+
+   public function chunk_upload_fasilitasAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Invalid request.'], 405);
+      }
+
+      $uploadId = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $this->request->getPost('upload_id'));
+      $chunkIndex = (int) $this->request->getPost('chunk_index');
+      $totalChunks = (int) $this->request->getPost('total_chunks');
+
+      if ($uploadId === '' || $totalChunks < 1 || $chunkIndex < 0 || $chunkIndex >= $totalChunks) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Parameter chunk tidak valid.']);
+      }
+
+      $fileInfo = $_FILES['chunk_data'] ?? null;
+      if (! is_array($fileInfo) || (int) ($fileInfo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Chunk file tidak diterima.']);
+      }
+
+      $tmpName = (string) $fileInfo['tmp_name'];
+      $chunkSize = (int) $fileInfo['size'];
+      if (! is_uploaded_file($tmpName) || $chunkSize <= 0) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Chunk tidak valid.']);
+      }
+
+      if ($chunkSize > (4 * 1024 * 1024)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Ukuran chunk melebihi 4MB.']);
+      }
+
+      $tempDir = sys_get_temp_dir() . '/fasilitas_chunks/' . $uploadId;
+      if (! is_dir($tempDir)) {
+         mkdir($tempDir, 0750, true);
+      }
+
+      $chunkPath = $tempDir . '/chunk_' . $chunkIndex;
+      if (! move_uploaded_file($tmpName, $chunkPath)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Gagal menyimpan chunk ke server.']);
+      }
+
+      $receivedCount = count(glob($tempDir . '/chunk_*'));
+      if ($receivedCount < $totalChunks) {
+         return $this->jsonResponse([
+            'success' => true,
+            'done' => false,
+            'received' => $receivedCount,
+            'total' => $totalChunks,
+            'message' => "Chunk {$chunkIndex} diterima.",
+         ]);
+      }
+
+      $metaFile = $tempDir . '/meta.json';
+      $meta = [];
+      if (file_exists($metaFile)) {
+         $meta = json_decode(file_get_contents($metaFile), true) ?: [];
+      }
+      $extension = strtolower((string) ($meta['extension'] ?? 'jpg'));
+      $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+      if (! in_array($extension, $allowedExtensions, true)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Ekstensi foto fasilitas tidak valid.']);
+      }
+
+      $targetDir = BASE_PATH . '/public/images/fasilitas';
+      if (! is_dir($targetDir)) {
+         mkdir($targetDir, 0755, true);
+      }
+
+      $fileName = 'fasilitas_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+      $targetPath = $targetDir . '/' . $fileName;
+
+      $outHandle = fopen($targetPath, 'wb');
+      if (! $outHandle) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Gagal membuat file output.']);
+      }
+
+      for ($i = 0; $i < $totalChunks; $i++) {
+         $chunkFile = $tempDir . '/chunk_' . $i;
+         if (! file_exists($chunkFile)) {
+            fclose($outHandle);
+            return $this->jsonResponse(['success' => false, 'message' => "Chunk ke-{$i} hilang saat perakitan."]);
+         }
+         $chunkHandle = fopen($chunkFile, 'rb');
+         stream_copy_to_stream($chunkHandle, $outHandle);
+         fclose($chunkHandle);
+      }
+      fclose($outHandle);
+
+      foreach (glob($tempDir . '/*') as $f) {
+         @unlink($f);
+      }
+      @rmdir($tempDir);
+
+      return $this->jsonResponse([
+         'success' => true,
+         'done' => true,
+         'file_path' => 'images/fasilitas/' . $fileName,
+         'message' => 'Upload selesai.',
+      ]);
+   }
+
+   public function save_extension_fasilitasAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->jsonResponse(['success' => false], 405);
+      }
+
+      $uploadId = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $this->request->getPost('upload_id'));
+      $extension = strtolower(preg_replace('/[^a-z0-9]/', '', (string) $this->request->getPost('extension')));
+      $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+      if ($uploadId === '' || ! in_array($extension, $allowedExtensions, true)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Parameter tidak valid.']);
+      }
+
+      $tempDir = sys_get_temp_dir() . '/fasilitas_chunks/' . $uploadId;
       if (! is_dir($tempDir)) {
          mkdir($tempDir, 0750, true);
       }

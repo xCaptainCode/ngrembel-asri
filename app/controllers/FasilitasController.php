@@ -4,6 +4,11 @@ use Phalcon\Mvc\Controller;
 
 class FasilitasController extends Controller {
     public function indexAction() {
-        // Halaman Fasilitas
+        $fasilitasList = $this->db->fetchAll(
+            "SELECT * FROM fasilitas WHERE is_active = true ORDER BY created_at ASC",
+            \Phalcon\Db::FETCH_ASSOC
+        );
+
+        $this->view->setVar('fasilitasList', $fasilitasList ?: []);
     }
 }

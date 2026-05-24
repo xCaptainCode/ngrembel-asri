@@ -41,7 +41,7 @@
             <li class="{{ this.request.getURI() == url('settings/field_trip') ? 'active' : '' }}"><a href="{{ url('settings/field_trip') }}">Field Trip <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/fun_game') ? 'active' : '' }}"><a href="{{ url('settings/fun_game') }}">Fun Game <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/mini_zoo') ? 'active' : '' }}"><a href="{{ url('settings/mini_zoo') }}">Mini Zoo <i class="fas fa-check-circle"></i></a></li>
-            <li class="{{ this.request.getURI() == url('settings/fasilitas') ? 'active' : '' }}"><a href="{{ url('settings/fasilitas') }}">Fasilitas</a></li>
+            <li class="{{ this.request.getURI() == url('settings/fasilitas') ? 'active' : '' }}"><a href="{{ url('settings/fasilitas') }}">Fasilitas <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/galeri') ? 'active' : '' }}"><a href="{{ url('settings/galeri') }}">Galeri <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/kritik_saran') ? 'active' : '' }}"><a href="{{ url('settings/kritik_saran') }}">Kritik & Saran</a></li>
          </ul>
