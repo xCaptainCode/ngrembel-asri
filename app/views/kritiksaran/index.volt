@@ -94,7 +94,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 14px;
+      padding: 10px;
       background: rgba(13, 36, 22, 0.6);
       border: 1.5px solid rgba(255, 255, 255, 0.15);
       border-radius: 10px;
@@ -104,7 +104,7 @@
    }
 
    .type-label .icon {
-      font-size: 1.5rem;
+      font-size: 0.85rem;
       margin-bottom: 4px;
    }
 
@@ -218,7 +218,7 @@
    .badge {
       display: inline-block;
       padding: 4px 10px;
-      border-radius: 6px;
+      border-radius: 16px;
       font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.8px;

@@ -32,7 +32,7 @@
       color: #ffd1d1;
       border: 1px solid rgba(224, 94, 94, 0.35);
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: 16px;
       font-size: 0.8rem;
       font-weight: 700;
       letter-spacing: 0.4px;
@@ -42,7 +42,7 @@
       color: #c9f7d8;
       border: 1px solid rgba(92, 170, 120, 0.35);
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: 16px;
       font-size: 0.8rem;
       font-weight: 700;
       letter-spacing: 0.4px;
@@ -97,7 +97,7 @@
                 data-response="{{ item['response'] }}"
                 data-is-published="{{ item['is_published'] ? '1' : '0' }}">
                <td style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08); font-size: 0.85rem; opacity: 0.8;">
-                  {{ item['created_at'] }}
+                  {{ Helpers.formatDateTime(item['created_at'], 'd M Y - H:i') }}
                </td>
                <td style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08); font-weight: 600;">{{ item['nama'] }}</td>
                <td style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08); text-align: center;">
