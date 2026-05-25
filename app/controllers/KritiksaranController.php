@@ -12,7 +12,7 @@ class KritiksaranController extends Controller {
 
             if ($nama === '' || $kritikSaranInput === '' || !in_array($type, ['kritik', 'saran'], true)) {
                 $this->session->set('krisa_error', 'Semua field wajib diisi dengan benar.');
-                return $this->response->redirect('kritiksaran');
+                return $this->response->redirect('kritik-saran');
             }
 
             try {
@@ -37,7 +37,7 @@ class KritiksaranController extends Controller {
                 $this->session->set('krisa_error', 'Gagal menyimpan data: ' . $e->getMessage());
             }
 
-            return $this->response->redirect('kritiksaran');
+            return $this->response->redirect('kritik-saran');
         }
 
         // Ambil 5 data pertama yang dipublikasikan

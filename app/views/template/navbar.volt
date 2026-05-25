@@ -5,7 +5,7 @@
    </a>
    <ul class="nav-menu" id="navMenu">
       <li class="{{ this.request.getURI() == url('') ? 'active' : '' }}"><a href="{{ url('') }}">Dashboard</a></li>
-      <li class="{{ this.request.getURI() == url('pricelist') ? 'active' : '' }}"><a href="{{ url('pricelist') }}">Price List</a></li>
+      <li class="{{ this.request.getURI() == url('price-list') ? 'active' : '' }}"><a href="{{ url('price-list') }}">Price List</a></li>
       <li class="nav-item-dropdown {{ this.request.getURI() == url('wahana') ? 'active' : '' }}">
          <a href="javascript:void(0);" class="nav-link-main nav-sub-toggle" data-target="wahanaSubmenu">
             <span>Wahana</span>
@@ -14,16 +14,16 @@
             </svg>
          </a>
          <ul class="nav-submenu" id="wahanaSubmenu">
-            <li class="{{ this.request.getURI() == url('wahana/permainan') ? 'active' : '' }}"><a href="{{ url('wahana/permainan') }}">Permainan</a></li>
-            <li class="{{ this.request.getURI() == url('wahana/paintball') ? 'active' : '' }}"><a href="{{ url('wahana/paintball') }}">Paintball</a></li>
-            <li class="{{ this.request.getURI() == url('wahana/field_trip') ? 'active' : '' }}"><a href="{{ url('wahana/field_trip') }}">Field Trip</a></li>
-            <li class="{{ this.request.getURI() == url('wahana/fun_game') ? 'active' : '' }}"><a href="{{ url('wahana/fun_game') }}">Fun Game</a></li>
+            <li class="{{ this.request.getURI() == url('wahana-permainan') ? 'active' : '' }}"><a href="{{ url('wahana-permainan') }}">Permainan</a></li>
+            <li class="{{ this.request.getURI() == url('wahana-paintball') ? 'active' : '' }}"><a href="{{ url('wahana-paintball') }}">Paintball</a></li>
+            <li class="{{ this.request.getURI() == url('wahana-field-trip') ? 'active' : '' }}"><a href="{{ url('wahana-field-trip') }}">Field Trip</a></li>
+            <li class="{{ this.request.getURI() == url('wahana-fun-game') ? 'active' : '' }}"><a href="{{ url('wahana-fun-game') }}">Fun Game</a></li>
          </ul>
       </li>
-      <li class="{{ this.request.getURI() == url('minizoo') ? 'active' : '' }}"><a href="{{ url('minizoo') }}">Mini Zoo</a></li>
+      <li class="{{ this.request.getURI() == url('mini-zoo') ? 'active' : '' }}"><a href="{{ url('mini-zoo') }}">Mini Zoo</a></li>
       <li class="{{ this.request.getURI() == url('fasilitas') ? 'active' : '' }}"><a href="{{ url('fasilitas') }}">Fasilitas</a></li>
       <li class="{{ this.request.getURI() == url('galeri') ? 'active' : '' }}"><a href="{{ url('galeri') }}">Galeri</a></li>
-      <li class="{{ this.request.getURI() == url('kritiksaran') ? 'active' : '' }}"><a href="{{ url('kritiksaran') }}">Kritik & Saran</a></li>
+      <li class="{{ this.request.getURI() == url('kritik-saran') ? 'active' : '' }}"><a href="{{ url('kritik-saran') }}">Kritik & Saran</a></li>
       {% if session.get('role') == 'admin' %}
       <li class="nav-item-dropdown">
          <a href="javascript:void(0);" class="nav-link-main nav-sub-toggle" data-target="settingsSubmenu">
@@ -43,7 +43,7 @@
             <li class="{{ this.request.getURI() == url('settings/mini_zoo') ? 'active' : '' }}"><a href="{{ url('settings/mini_zoo') }}">Mini Zoo <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/fasilitas') ? 'active' : '' }}"><a href="{{ url('settings/fasilitas') }}">Fasilitas <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/galeri') ? 'active' : '' }}"><a href="{{ url('settings/galeri') }}">Galeri <i class="fas fa-check-circle"></i></a></li>
-            <li class="{{ this.request.getURI() == url('settings/kritik_saran') ? 'active' : '' }}"><a href="{{ url('settings/kritik_saran') }}">Kritik & Saran</a></li>
+            <li class="{{ this.request.getURI() == url('settings/kritik_saran') ? 'active' : '' }}"><a href="{{ url('settings/kritik_saran') }}">Kritik & Saran <i class="fas fa-check-circle"></i></a></li>
          </ul>
       </li>
       {% endif %}
@@ -69,14 +69,14 @@
 
             <div class="profile-divider"></div>
 
-            <a href="{{ url('member/point') }}" class="profile-item">
+            <a href="{{ url('member-point') }}" class="profile-item">
                <span class="profile-icon">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                </span>
                Point Saya
             </a>
             
-            <a href="{{ url('member/history') }}" class="profile-item">
+            <a href="{{ url('member-history') }}" class="profile-item">
                <span class="profile-icon">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                </span>

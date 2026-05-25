@@ -362,7 +362,7 @@
       <div class="r-left">
          <div class="glass-card">
             <h3>Kirim Masukan</h3>
-            <form action="{{ url('kritiksaran') }}" method="POST" id="krisaForm">
+            <form action="{{ url('kritik-saran') }}" method="POST" id="krisaForm">
                
                <div class="form-group">
                   <label>Jenis Masukan</label>
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function () {
    const paginationContainer = document.getElementById('paginationContainer');
 
    // URL Helper to resolve base domain path safely
-   const baseUri = "{{ url('kritiksaran/loadMore') }}";
+   const baseUri = "{{ url('kritik-saran/load-more') }}";
 
    // Fetch data function
    function fetchFeedback(isAppend = false) {

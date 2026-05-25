@@ -34,19 +34,20 @@
          <h4>Navigasi</h4>
          <ul>
             <li><a href="{{ url('') }}">Home</a></li>
-            <li><a href="{{ url('pricelist') }}">Price List</a></li>
-            <li><a href="{{ url('minizoo') }}">Mini Zoo</a></li>
+            <li><a href="{{ url('price-list') }}">Price List</a></li>
+            <li><a href="{{ url('mini-zoo') }}">Mini Zoo</a></li>
             <li><a href="{{ url('fasilitas') }}">Fasilitas</a></li>
             <li><a href="{{ url('galeri') }}">Galeri</a></li>
+            <li><a href="{{ url('kritik-saran') }}">Kritik & Saran</a></li>
          </ul>
       </div>
       <div class="footer-col">
          <h4>Wahana</h4>
          <ul>
-            <li><a href="{{ url('wahana/permainan') }}">Permainan</a></li>
-            <li><a href="{{ url('wahana/paintball') }}">Paintball</a></li>
-            <li><a href="{{ url('wahana/field_trip') }}">Field Trip</a></li>
-            <li><a href="{{ url('wahana/fun_game') }}">Fun Game</a></li>
+            <li><a href="{{ url('wahana-permainan') }}">Permainan</a></li>
+            <li><a href="{{ url('wahana-paintball') }}">Paintball</a></li>
+            <li><a href="{{ url('wahana-field-trip') }}">Field Trip</a></li>
+            <li><a href="{{ url('wahana-fun-game') }}">Fun Game</a></li>
          </ul>
       </div>
    </div>
