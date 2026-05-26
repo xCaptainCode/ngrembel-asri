@@ -373,7 +373,7 @@
 
             <div class="auth-foot">
                Belum punya akun? <a href="{{ url('registrasi') }}">Daftar</a><br><br>
-               Lupa password? <a href="{{ url('login/forgot') }}">Reset</a>
+               Lupa password? <a href="{{ url('lupa-password') }}">Reset</a>
             </div>
          </div>
       </div>
@@ -420,6 +420,18 @@
       });
    </script>
    {% do session.remove('registrasi_success') %}
+   {% endif %}
+
+   {% if session.has('reset_success') %}
+   <script>
+      Swal.fire({
+         icon: 'success',
+         title: 'Reset Password Sukses',
+         text: '{{ session.get("reset_success") }}',
+         confirmButtonColor: '#c8a84b'
+      });
+   </script>
+   {% do session.remove('reset_success') %}
    {% endif %}
 
 </body>

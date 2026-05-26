@@ -659,9 +659,60 @@ class Helpers {
       return $output;
    }
 
-   public static function getFotoVersion($empId) {
-      $path = BASE_PATH . '/public/images/emp/' . $empId . '.jpg';
-      return file_exists($path) ? filemtime($path) : time();
-   }
+    public static function getFotoVersion($empId) {
+       $path = BASE_PATH . '/public/images/emp/' . $empId . '.jpg';
+       return file_exists($path) ? filemtime($path) : time();
+    }
+
+    public static function sendMail($to, $subject, $body) {
+        $config = \Phalcon\Di::getDefault()->getShared('config');
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        
+        $logDir = BASE_PATH . '/cache/logs';
+        if (!is_dir($logDir)) {
+           mkdir($logDir, 0777, true);
+        }
+        $logFile = $logDir . '/mailer.log';
+
+        try {
+           $mail->isSMTP();
+           $mail->Host       = $config->mail->host;
+           $mail->SMTPAuth   = !empty($config->mail->username);
+           $mail->Username   = $config->mail->username;
+           $mail->Password   = $config->mail->password;
+           
+           if (!empty($config->mail->encryption)) {
+              $mail->SMTPSecure = $config->mail->encryption;
+           }
+           $mail->Port = $config->mail->port;
+
+           $mail->SMTPOptions = array(
+              'ssl' => array(
+                 'verify_peer' => false,
+                 'verify_peer_name' => false,
+                 'allow_self_signed' => true
+              )
+           );
+
+           $mail->setFrom($config->mail->from_email, $config->mail->from_name);
+           $mail->addAddress($to);
+
+           $mail->isHTML(true);
+           $mail->Subject = $subject;
+           $mail->Body    = $body;
+
+           $mail->send();
+
+           $logMessage = "[" . date('Y-m-d H:i:s') . "] SUCCESS: Email successfully sent to $to. (Host: {$config->mail->host}:{$config->mail->port})\n";
+           file_put_contents($logFile, $logMessage, FILE_APPEND);
+
+           return true;
+        } catch (\Exception $e) {
+           $logMessage = "[" . date('Y-m-d H:i:s') . "] ERROR: Failed to send email to $to. Mailer Error: " . $mail->ErrorInfo . ". Exception: " . $e->getMessage() . "\n";
+           file_put_contents($logFile, $logMessage, FILE_APPEND);
+
+           return false;
+        }
+     }
 
 }

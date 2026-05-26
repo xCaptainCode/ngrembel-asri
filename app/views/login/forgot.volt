@@ -124,6 +124,43 @@
          transform: translateY(-2px);
       }
 
+      .auth-field {
+         margin-bottom: 1.25rem;
+         text-align: left;
+      }
+
+      .auth-label {
+         display: block;
+         margin-bottom: .45rem;
+         font-size: .62rem;
+         letter-spacing: 2.5px;
+         text-transform: uppercase;
+         color: rgba(255, 255, 255, .62);
+      }
+
+      .auth-input {
+         width: 100%;
+         border: 1px solid rgba(255, 255, 255, .14);
+         background: rgba(255, 255, 255, .06);
+         border-radius: 12px;
+         padding: .84rem 1rem;
+         color: #fff;
+         outline: none;
+         font-family: 'Jost', sans-serif;
+         transition: border-color .25s, box-shadow .25s, background .25s;
+         font-size: 1rem;
+      }
+
+      .auth-input:focus {
+         border-color: rgba(232, 204, 122, .95);
+         box-shadow: 0 0 0 3px rgba(200, 168, 75, .16);
+         background: rgba(255, 255, 255, .08);
+      }
+
+      .auth-input::placeholder {
+         color: rgba(255, 255, 255, .38);
+      }
+
       @media (max-width: 991px) {
          .forgot-card {
             max-width: 100%;
@@ -152,19 +189,49 @@
    <section class="forgot-wrap">
       <div class="forgot-card">
          <h1 class="forgot-title">Lupa Password?</h1>
-         <p class="forgot-subtitle">
-            Fitur reset password sedang dalam pengembangan.
-         </p>
-         <p class="forgot-help">
-            Silakan hubungi admin untuk bantuan reset akun Anda sementara waktu.
+         <p class="forgot-subtitle" style="margin-bottom: 1.5rem;">
+            Masukkan email terdaftar Anda untuk menerima tautan pemulihan password.
          </p>
 
-         <div class="forgot-actions">
-            <a class="btn-forgot primary" href="{{ url('login') }}">Kembali ke Login</a>
-            <a class="btn-forgot secondary" href="{{ url('') }}"><span class="ti-home"></span> Home</a>
-         </div>
+         <form action="{{ url('lupa-password') }}" method="POST">
+            <div class="auth-field">
+               <label class="auth-label" for="email">Alamat Email</label>
+               <input class="auth-input" id="email" type="email" name="email" required placeholder="Masukkan email Anda">
+            </div>
+
+            <div class="forgot-actions" style="margin-top: 1.5rem;">
+               <button type="submit" class="btn-forgot primary">Kirim Link Reset</button>
+               <a class="btn-forgot secondary" href="{{ url('login') }}">Kembali</a>
+            </div>
+         </form>
       </div>
    </section>
+
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   
+   {% if session.has('forgot_error') %}
+   <script>
+      Swal.fire({
+         icon: 'error',
+         title: 'Gagal',
+         text: '{{ session.get("forgot_error") }}',
+         confirmButtonColor: '#c8a84b'
+      });
+   </script>
+   {% do session.remove('forgot_error') %}
+   {% endif %}
+
+   {% if session.has('forgot_success') %}
+   <script>
+      Swal.fire({
+         icon: 'success',
+         title: 'Permintaan Dikirim',
+         text: '{{ session.get("forgot_success") }}',
+         confirmButtonColor: '#c8a84b'
+      });
+   </script>
+   {% do session.remove('forgot_success') %}
+   {% endif %}
 
 </body>
 </html>

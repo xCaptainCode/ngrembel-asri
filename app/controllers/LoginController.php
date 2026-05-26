@@ -68,8 +68,184 @@ class LoginController extends \Phalcon\Mvc\Controller {
    }
 
    public function forgotAction() {
+      if ($this->session->has('id')) {
+         return $this->response->redirect('');
+      }
       $this->view->pick("login/forgot");
       $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+   }
+
+   public function kirimLinkAction() {
+      $this->view->disable();
+
+      if (!$this->request->isPost()) {
+         return $this->response->redirect('lupa-password');
+      }
+
+      $email = trim($this->request->getPost('email', 'email'));
+
+      if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+         $this->session->set('forgot_error', 'Format email tidak valid.');
+         return $this->response->redirect('lupa-password');
+      }
+
+      try {
+         $member = Member::findFirst([
+            'conditions' => 'email = :email: AND is_active = TRUE',
+            'bind' => ['email' => $email]
+         ]);
+
+         if ($member) {
+            $token = bin2hex(random_bytes(32));
+            
+            $sql = "INSERT INTO password_resets (email, token, expired_at)
+                    VALUES (:email, :token, NOW() + INTERVAL '1 hour')";
+            
+            $this->db->execute($sql, [
+               'email' => $email,
+               'token' => $token
+            ]);
+
+            $protocol = $this->request->getScheme() . '://';
+            $host = $this->request->getHttpHost();
+            $baseUri = $this->url->getBaseUri();
+            
+            $link = $protocol . $host . rtrim($baseUri, '/') . '/reset-password?token=' . $token;
+
+            $subject = 'Reset Password Akun Member Ngrembel Asri';
+            $body = '
+               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #c8a84b; border-radius: 10px; background-color: #fcfcfc;">
+                  <h2 style="color: #0d2416; text-align: center;">Pemulihan Password</h2>
+                  <p>Halo,</p>
+                  <p>Kami menerima permintaan untuk mengatur ulang password akun member Ngrembel Asri Anda.</p>
+                  <p>Silakan klik tautan di bawah ini untuk mengatur ulang password Anda:</p>
+                  <p style="text-align: center; margin: 30px 0;">
+                     <a href="' . $link . '" style="background: linear-gradient(135deg, #c8a84b, #e8cc7a); color: #0d2416; padding: 12px 24px; text-decoration: none; border-radius: 20px; font-weight: bold; display: inline-block;">Reset Password</a>
+                  </p>
+                  <p>Tautan ini hanya akan aktif selama <strong>1 jam</strong>.</p>
+                  <p>Jika Anda tidak merasa mengajukan permintaan ini, silakan abaikan email ini.</p>
+                  <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                  <p style="font-size: 12px; color: #777; text-align: center;">Ngrembel Asri - Jl. Raya Manyaran - Gunungpati Km. 10 Semarang</p>
+               </div>
+            ';
+
+            Helpers::sendMail($email, $subject, $body);
+         }
+
+         $this->session->set('forgot_success', 'Instruksi pemulihan telah dikirim ke email Anda jika terdaftar.');
+      } catch (\Throwable $e) {
+         $this->session->set('forgot_error', 'Terjadi kesalahan: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('lupa-password');
+   }
+
+   public function tampilkanFormAction() {
+      if ($this->session->has('id')) {
+         return $this->response->redirect('');
+      }
+
+      $token = trim($this->request->getQuery('token', 'string'));
+
+      if ($token === '') {
+         $this->session->set('forgot_error', 'Token reset password tidak ditemukan.');
+         return $this->response->redirect('lupa-password');
+      }
+
+      try {
+         $sql = "SELECT email, expired_at, is_used
+                 FROM password_resets
+                 WHERE token = :token
+                 LIMIT 1";
+         
+         $reset = $this->db->fetchOne($sql, \Phalcon\Db::FETCH_ASSOC, ['token' => $token]);
+
+         if (!$reset) {
+            $this->session->set('forgot_error', 'Token tidak valid.');
+            return $this->response->redirect('lupa-password');
+         }
+
+         if ($reset['is_used']) {
+            $this->session->set('forgot_error', 'Token ini sudah pernah digunakan.');
+            return $this->response->redirect('lupa-password');
+         }
+
+         if (strtotime($reset['expired_at']) < time()) {
+            $this->session->set('forgot_error', 'Token reset password sudah kedaluwarsa.');
+            return $this->response->redirect('lupa-password');
+         }
+
+         $this->view->setVar('token', $token);
+         $this->view->pick("login/reset");
+         $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+
+      } catch (\Throwable $e) {
+         $this->session->set('forgot_error', 'Terjadi kesalahan: ' . $e->getMessage());
+         return $this->response->redirect('lupa-password');
+      }
+   }
+
+   public function prosesResetAction() {
+      $this->view->disable();
+
+      if (!$this->request->isPost()) {
+         return $this->response->redirect('lupa-password');
+      }
+
+      $token           = trim($this->request->getPost('token', 'string'));
+      $password        = (string)$this->request->getPost('password');
+      $confirmPassword = (string)$this->request->getPost('confirm_password');
+
+      if ($password === '' || $confirmPassword === '') {
+         $this->session->set('reset_error', 'Semua field password wajib diisi.');
+         return $this->response->redirect('reset-password?token=' . $token);
+      }
+
+      if (strlen($password) < 8) {
+         $this->session->set('reset_error', 'Password minimal terdiri dari 8 karakter.');
+         return $this->response->redirect('reset-password?token=' . $token);
+      }
+
+      if ($password !== $confirmPassword) {
+         $this->session->set('reset_error', 'Password dan Konfirmasi Password tidak cocok.');
+         return $this->response->redirect('reset-password?token=' . $token);
+      }
+
+      try {
+         $sql = "SELECT email, expired_at, is_used
+                 FROM password_resets
+                 WHERE token = :token
+                 LIMIT 1";
+         
+         $reset = $this->db->fetchOne($sql, \Phalcon\Db::FETCH_ASSOC, ['token' => $token]);
+
+         if (!$reset || $reset['is_used'] || strtotime($reset['expired_at']) < time()) {
+            $this->session->set('forgot_error', 'Token pemulihan tidak valid atau sudah kedaluwarsa.');
+            return $this->response->redirect('lupa-password');
+         }
+
+         $sqlUpdate = "UPDATE members
+                       SET password = crypt(:password, gen_salt('bf'))
+                       WHERE email = :email";
+         
+         $this->db->execute($sqlUpdate, [
+            'password' => $password,
+            'email'    => $reset['email']
+         ]);
+
+         $sqlToken = "UPDATE password_resets
+                      SET is_used = TRUE
+                      WHERE token = :token";
+         
+         $this->db->execute($sqlToken, ['token' => $token]);
+
+         $this->session->set('reset_success', 'Password Anda telah berhasil diperbarui. Silakan masuk menggunakan password baru.');
+         return $this->response->redirect('login');
+
+      } catch (\Throwable $e) {
+         $this->session->set('reset_error', 'Terjadi kesalahan: ' . $e->getMessage());
+         return $this->response->redirect('reset-password?token=' . $token);
+      }
    }
 
    public function registrasiAction() {
