@@ -13,21 +13,62 @@ class SettingsController extends Controller {
    }
 
    public function memberAction() {
-      // Ambil daftar seluruh member
+      // Retrieve query parameters
+      $search  = trim((string) $this->request->getQuery('search', 'string', ''));
+      $page    = max(1, (int) $this->request->getQuery('page', 'int', 1));
+      $perPage = (int) $this->request->getQuery('per_page', 'int', 10);
+
+      if (!in_array($perPage, [10, 25, 50], true)) {
+          $perPage = 10;
+      }
+
+      $whereClause = '';
+      $params = [];
+
+      if ($search !== '') {
+          $whereClause = "WHERE (nama ILIKE :search 
+                          OR email ILIKE :search 
+                          OR no_hp ILIKE :search 
+                          OR no_member ILIKE :search)";
+          $params['search'] = '%' . $search . '%';
+      }
+
+      // Count total members matching criteria
+      $countResult = $this->db->fetchOne(
+          "SELECT COUNT(*) AS total FROM members {$whereClause}",
+          \Phalcon\Db::FETCH_ASSOC,
+          $params
+      );
+      $totalMembers = $countResult ? (int) $countResult['total'] : 0;
+      $totalPages = max(1, (int) ceil($totalMembers / $perPage));
+
+      if ($page > $totalPages) $page = $totalPages;
+      $offset = ($page - 1) * $perPage;
+
+      // Fetch members for current page
+      $params['limit'] = $perPage;
+      $params['offset'] = $offset;
       $members = $this->db->fetchAll(
-         "SELECT * FROM members ORDER BY nama ASC",
-         \Phalcon\Db::FETCH_ASSOC
+          "SELECT * FROM members {$whereClause} ORDER BY nama ASC LIMIT :limit OFFSET :offset",
+          \Phalcon\Db::FETCH_ASSOC,
+          $params
       );
 
-      // Hitung jumlah pendaftaran baru dengan status 'pending'
+      // Pending registrations count
       $pendingCountResult = $this->db->fetchOne(
-         "SELECT COUNT(*) AS total FROM registrasi WHERE status = 'pending'",
-         \Phalcon\Db::FETCH_ASSOC
+          "SELECT COUNT(*) AS total FROM registrasi WHERE status = 'pending'",
+          \Phalcon\Db::FETCH_ASSOC
       );
       $pendingCount = $pendingCountResult ? (int) $pendingCountResult['total'] : 0;
 
+      // Pass variables to view
       $this->view->setVar('members', $members ?: []);
       $this->view->setVar('pendingCount', $pendingCount);
+      $this->view->setVar('totalMembers', $totalMembers);
+      $this->view->setVar('currentPage', $page);
+      $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('totalPages', $totalPages);
+      $this->view->setVar('search', $search);
       $this->view->setVar('updateSuccess', $this->session->get('member_update_success'));
       $this->view->setVar('updateError', $this->session->get('member_update_error'));
       $this->session->remove('member_update_success');
@@ -92,7 +133,12 @@ class SettingsController extends Controller {
          $this->session->set('member_update_error', 'Gagal memperbarui data member: ' . $e->getMessage());
       }
 
-      return $this->response->redirect('settings/member');
+              // Preserve search and pagination params on redirect
+        $search  = $this->request->getQuery('search', 'string', '');
+        $page    = $this->request->getQuery('page', 'int', 1);
+        $perPage = $this->request->getQuery('per_page', 'int', 10);
+        $query   = http_build_query(['search' => $search, 'page' => $page, 'per_page' => $perPage]);
+        return $this->response->redirect('settings/member?' . $query);
    }
 
    public function registrasiAction() {

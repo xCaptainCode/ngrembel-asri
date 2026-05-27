@@ -33,40 +33,6 @@ $di->setShared('url', function () {
 /**
  * Setting up the view component
  */
-// $di->setShared('view', function () {
-//     $config = $this->getConfig();
-
-//     $view = new View();
-//     $view->setDI($this);
-//     $view->setViewsDir($config->application->viewsDir);
-
-//     $view->registerEngines([
-//         '.volt' => function ($view) {
-//             $config = $this->getConfig();
-
-//             $volt = new VoltEngine($view, $this);
-
-//             $volt->setOptions([
-//                 'compiledPath' => $config->application->cacheDir,
-//                 'compiledSeparator' => '_',
-// 					 'compileAlways' => true
-//             ]);
-// 				/**
-// 				* Register to Filters the functions in Helpers
-// 				*/
-// 				$volt->getCompiler()->addFilter('ucwords', function($resolvedArgs, $exprArgs) {
-// 					return  'Helpers::ucwords(' . $resolvedArgs . ');';
-// 				});
-
-// 				return $volt;
-//          },
-//          '.phtml' => PhpEngine::class
-
-//     ]);
-
-//     return $view;
-// });
-
 $di->setShared('view', function () {
     $config = $this->getConfig();
 
@@ -99,6 +65,8 @@ $di->setShared('view', function () {
             $volt->getCompiler()->addFunction('get_setting', function($resolvedArgs, $exprArgs) {
                 return 'Setting::getVal(' . $resolvedArgs . ')';
             });
+
+            $volt->getCompiler()->addFunction('http_build_query', 'http_build_query');
 
             return $volt;
         },
