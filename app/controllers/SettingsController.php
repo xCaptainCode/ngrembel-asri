@@ -2047,6 +2047,38 @@ class SettingsController extends Controller {
    }
 
    public function fasilitasAction() {
+      $search  = trim((string) $this->request->getQuery('search', 'string', ''));
+      $page    = max(1, (int) $this->request->getQuery('page', 'int', 1));
+      $perPage = (int) $this->request->getQuery('per_page', 'int', 10);
+
+      if (!in_array($perPage, [10, 25, 50], true)) {
+         $perPage = 10;
+      }
+
+      $whereClause = "";
+      $params = [];
+
+      if ($search !== '') {
+         $whereClause .= "WHERE (f.nama ILIKE :search OR f.deskripsi ILIKE :search)";
+         $params['search'] = '%' . $search . '%';
+      }
+
+      // Count total data matching criteria
+      $countResult = $this->db->fetchOne(
+         "SELECT COUNT(*) AS total FROM fasilitas f {$whereClause}",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+      $totalData = $countResult ? (int) $countResult['total'] : 0;
+      $totalPages = max(1, (int) ceil($totalData / $perPage));
+
+      if ($page > $totalPages) $page = $totalPages;
+      $offset = ($page - 1) * $perPage;
+
+      // Fetch data for current page
+      $params['limit'] = $perPage;
+      $params['offset'] = $offset;
+      
       $fasilitasList = $this->db->fetchAll(
          "SELECT f.*,
                 m_created.nama AS created_by_nama,
@@ -2054,11 +2086,19 @@ class SettingsController extends Controller {
           FROM fasilitas f
           LEFT JOIN members m_created ON CAST(f.created_by AS TEXT) = CAST(m_created.id AS TEXT)
           LEFT JOIN members m_updated ON CAST(f.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
-          ORDER BY nama ASC, created_at DESC",
-         \Phalcon\Db::FETCH_ASSOC
+          {$whereClause}
+          ORDER BY nama ASC, created_at DESC
+          LIMIT :limit OFFSET :offset",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
       );
 
       $this->view->setVar('fasilitasList', $fasilitasList ?: []);
+      $this->view->setVar('totalData', $totalData);
+      $this->view->setVar('currentPage', $page);
+      $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('totalPages', $totalPages);
+      $this->view->setVar('search', $search);
       $this->view->setVar('updateSuccess', $this->session->get('fasilitas_update_success'));
       $this->view->setVar('updateError', $this->session->get('fasilitas_update_error'));
       $this->session->remove('fasilitas_update_success');

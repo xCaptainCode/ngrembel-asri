@@ -1,0 +1,33 @@
+-- seed-fasilitas.sql
+INSERT INTO fasilitas (
+    nama,
+    deskripsi,
+    img_url,
+    is_active,
+    created_at
+) VALUES
+('Kolam Renang', 'Fasilitas kolam renang untuk dewasa dan anak-anak.', '', TRUE, NOW()),
+('Area Parkir', 'Area parkir luas untuk kendaraan pengunjung.', '', TRUE, NOW()),
+('Mushola', 'Tempat ibadah yang nyaman dan bersih.', '', TRUE, NOW()),
+('WiFi Gratis', 'Akses internet gratis untuk seluruh area.', '', TRUE, NOW()),
+('Ruang Meeting', 'Ruang meeting dengan kapasitas 20 orang.', '', TRUE, NOW()),
+('Taman Bermain', 'Area bermain anak dengan berbagai permainan.', '', TRUE, NOW()),
+('Toilet Umum', 'Toilet umum yang bersih dan terawat.', '', TRUE, NOW()),
+('Kantin', 'Kantin dengan berbagai pilihan makanan dan minuman.', '', TRUE, NOW()),
+('Gazebo', 'Tempat bersantai outdoor untuk pengunjung.', '', TRUE, NOW()),
+('Lapangan Futsal', 'Lapangan futsal indoor dengan rumput sintetis.', '', TRUE, NOW()),
+('Lapangan Basket', 'Lapangan basket outdoor untuk olahraga.', '', TRUE, NOW()),
+('Aula Serbaguna', 'Aula untuk acara seminar dan pertemuan.', '', TRUE, NOW()),
+('Ruang VIP', 'Ruang eksklusif untuk tamu khusus.', '', TRUE, NOW()),
+('Area BBQ', 'Tempat barbeque untuk acara keluarga.', '', TRUE, NOW()),
+('Mini Market', 'Toko kecil untuk kebutuhan harian pengunjung.', '', TRUE, NOW()),
+('Kamar Ganti', 'Kamar ganti yang nyaman dan aman.', '', TRUE, NOW()),
+('Tempat Cuci Tangan', 'Fasilitas cuci tangan di beberapa titik.', '', TRUE, NOW()),
+('Pos Keamanan', 'Pos keamanan aktif selama 24 jam.', '', TRUE, NOW()),
+('Ruang Tunggu', 'Ruang tunggu dengan kursi yang nyaman.', '', TRUE, NOW()),
+('Panggung Hiburan', 'Panggung untuk acara hiburan dan live music.', '', TRUE, NOW()),
+('Tempat Penyewaan', 'Area penyewaan perlengkapan dan alat.', '', TRUE, NOW()),
+('Jalur Jogging', 'Lintasan jogging di area sekitar.', '', TRUE, NOW()),
+('Spot Foto', 'Area khusus untuk berfoto pengunjung.', '', TRUE, NOW()),
+('Ruang Laktasi', 'Ruang khusus ibu menyusui.', '', TRUE, NOW()),
+('Charging Station', 'Tempat pengisian daya perangkat elektronik.', '', TRUE, NOW());

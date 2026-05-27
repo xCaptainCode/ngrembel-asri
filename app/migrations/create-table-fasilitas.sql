@@ -1,4 +1,4 @@
--- Active: 1776004703790@@127.0.0.1@5432@ngrembel_asri@public
+-- Active: 1779269040582@@localhost@5432@ngrembel_asri@public
 CREATE TABLE fasilitas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nama VARCHAR NOT NULL,
