@@ -186,7 +186,7 @@
          <form id="searchForm" method="GET"
             style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;">
             <input type="text" name="search" placeholder="Search members..." value="{{ search }}"
-               style="padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff;" />
+               style="padding:8px 100px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff;" />
             <button type="submit" class="btn-cari">Cari</button>
             {% if search is not empty %}
             <a href="{{ url('settings/member') }}" class="btn-reset">Reset</a>

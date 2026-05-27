@@ -134,7 +134,7 @@
          <form id="searchForm" method="GET"
             style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;">
             <input type="text" name="search" placeholder="Cari permainan..." value="{{ search }}"
-               style="padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff; font-family: 'Jost', sans-serif;" />
+               style="padding:8px 100px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff; font-family: 'Jost', sans-serif;" />
             <button type="submit" class="btn-cari">Cari</button>
             {% if search is not empty %}
             <a href="{{ url('settings/permainan') }}" class="btn-reset">Reset</a>
@@ -170,6 +170,10 @@
       <p>Data Wahana Permainan belum tersedia.</p>
       {% else %}
       <div class="table-responsive" style="overflow-x: auto; background: rgba(16, 36, 23, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;">
+         <div style="margin-bottom:8px; color:#e8cc7a; font-size:0.9rem;">
+         Menampilkan {{ ((currentPage - 1) * perPage) + 1 }} – {{ ((currentPage - 1) * perPage) + wahanaList|length }} dari
+         {{ totalWahana }} data
+      </div>
          <table class="table table-sm text-white" style="width:100%; border-collapse: collapse;">
             <thead>
                <tr style="background: rgba(0,0,0,0.2);">
