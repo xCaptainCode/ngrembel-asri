@@ -1603,6 +1603,37 @@ class SettingsController extends Controller {
    }
    
    public function fun_gameAction() {
+      $search  = trim((string) $this->request->getQuery('search', 'string', ''));
+      $page    = max(1, (int) $this->request->getQuery('page', 'int', 1));
+      $perPage = (int) $this->request->getQuery('per_page', 'int', 10);
+
+      if (!in_array($perPage, [10, 25, 50], true)) {
+          $perPage = 10;
+      }
+
+      $whereClause = "WHERE w.kategori = 'FUN GAME'";
+      $params = [];
+
+      if ($search !== '') {
+          $whereClause .= " AND (w.nama ILIKE :search OR w.deskripsi ILIKE :search)";
+          $params['search'] = '%' . $search . '%';
+      }
+
+      // Count total matching
+      $countResult = $this->db->fetchOne(
+         "SELECT COUNT(*) AS total FROM wahana w {$whereClause}",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+      $totalWahana = $countResult ? (int) $countResult['total'] : 0;
+      $totalPages = max(1, (int) ceil($totalWahana / $perPage));
+
+      if ($page > $totalPages) $page = $totalPages;
+      $offset = ($page - 1) * $perPage;
+
+      // Fetch matching records
+      $params['limit'] = $perPage;
+      $params['offset'] = $offset;
       $wahanaList = $this->db->fetchAll(
          "SELECT w.*,
                 m_created.nama AS created_by_nama,
@@ -1610,15 +1641,21 @@ class SettingsController extends Controller {
           FROM wahana w
           LEFT JOIN members m_created ON CAST(w.created_by AS TEXT) = CAST(m_created.id AS TEXT)
           LEFT JOIN members m_updated ON CAST(w.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
-          WHERE w.kategori = 'FUN GAME'
-          ORDER BY w.urutan ASC, w.nama ASC",
-         \Phalcon\Db::FETCH_ASSOC
+          {$whereClause}
+          ORDER BY w.urutan ASC, w.nama ASC
+          LIMIT :limit OFFSET :offset",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
       );
 
       $this->view->setVar('wahanaList', $wahanaList ?: []);
+      $this->view->setVar('totalWahana', $totalWahana);
+      $this->view->setVar('currentPage', $page);
+      $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('totalPages', $totalPages);
+      $this->view->setVar('search', $search);
       $this->view->setVar('updateSuccess', $this->session->get('wahana_update_success'));
       $this->view->setVar('updateError', $this->session->get('wahana_update_error'));
-
       $this->session->remove('wahana_update_success');
       $this->session->remove('wahana_update_error');
    }
