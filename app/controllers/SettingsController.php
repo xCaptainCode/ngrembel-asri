@@ -1858,6 +1858,37 @@ class SettingsController extends Controller {
    }
 
    public function mini_zooAction() {
+      $search  = trim((string) $this->request->getQuery('search', 'string', ''));
+      $page    = max(1, (int) $this->request->getQuery('page', 'int', 1));
+      $perPage = (int) $this->request->getQuery('per_page', 'int', 10);
+
+      if (!in_array($perPage, [10, 25, 50], true)) {
+         $perPage = 10;
+      }
+
+      $whereClause = "";
+      $params = [];
+
+      if ($search !== '') {
+         $whereClause .= "WHERE (m.nama ILIKE :search OR m.deskripsi ILIKE :search)";
+         $params['search'] = '%' . $search . '%';
+      }
+
+      // Count total data matching criteria
+      $countResult = $this->db->fetchOne(
+         "SELECT COUNT(*) AS total FROM mini_zoo m {$whereClause}",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+      $totalData = $countResult ? (int) $countResult['total'] : 0;
+      $totalPages = max(1, (int) ceil($totalData / $perPage));
+
+      if ($page > $totalPages) $page = $totalPages;
+      $offset = ($page - 1) * $perPage;
+
+      // Fetch data for current page
+      $params['limit'] = $perPage;
+      $params['offset'] = $offset;
       $miniZooList = $this->db->fetchAll(
          "SELECT m.*,
                m_created.nama AS created_by_nama,
@@ -1865,11 +1896,20 @@ class SettingsController extends Controller {
          FROM mini_zoo m
          LEFT JOIN members m_created ON CAST(m.created_by AS TEXT) = CAST(m_created.id AS TEXT)
          LEFT JOIN members m_updated ON CAST(m.updated_by AS TEXT) = CAST(m_updated.id AS TEXT)
-         ORDER BY m.nama ASC, created_at DESC",
-         \Phalcon\Db::FETCH_ASSOC
+         {$whereClause}
+         ORDER BY m.nama ASC, created_at DESC
+         LIMIT :limit
+         OFFSET :offset",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
       );
 
       $this->view->setVar('miniZooList', $miniZooList ?: []);
+      $this->view->setVar('totalData', $totalData);
+      $this->view->setVar('currentPage', $page);
+      $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('totalPages', $totalPages);
+      $this->view->setVar('search', $search);
       $this->view->setVar('updateSuccess', $this->session->get('mini_zoo_update_success'));
       $this->view->setVar('updateError', $this->session->get('mini_zoo_update_error'));
       $this->session->remove('mini_zoo_update_success');

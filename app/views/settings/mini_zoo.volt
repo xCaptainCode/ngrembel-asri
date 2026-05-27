@@ -27,13 +27,100 @@
       font-size: 0.85rem;
       font-weight: 600;
    }
+   .pagination-link {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      text-decoration: none;
+      margin: 0 2px;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+   }
+
+   .pagination-link:hover {
+      background: rgba(212, 177, 90, 0.2);
+      border-color: rgba(212, 177, 90, 0.4);
+      color: #d4b15a;
+   }
+
+   .pagination-link.active {
+      background: #d4b15a;
+      color: #102417;
+      font-weight: 700;
+      border-color: #d4b15a;
+   }
+
+   .pagination-link.disabled {
+      pointer-events: none;
+      opacity: 0.4;
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.4);
+   }
+
+   .btn-cari {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #d4b15a;
+      background: #d4b15a;
+      color: #102417;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+   }
+
+   .btn-cari:hover {
+      background: #c29f4f;
+      border-color: #c29f4f;
+      transform: translateY(-1px);
+   }
+
+   .btn-reset {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+   }
+
+   .btn-reset:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+      color: #fff;
+   }
 </style>
 
 <section style="padding: 120px 5% 60px; min-height: 70vh;">
    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
       <div>
-         <h1 style="margin: 0 0 4px 0;">Settings - Mini Zoo</h1>
+         <h1
+            style="margin: 0 0 4px 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 5vw, 3rem); font-weight: 400;">Settings - Mini Zoo</h1>
          <p style="margin: 0;">Klik pada baris tabel untuk meng-edit data Mini Zoo.</p>
+         <form id="searchForm" method="GET"
+            style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;">
+            <input type="text" name="search" placeholder="Cari Satwa..." value="{{ search }}"
+               style="padding:8px 100px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff; font-family: 'Jost', sans-serif;" />
+            <button type="submit" class="btn-cari">Cari</button>
+            {% if search is not empty %}
+            <a href="{{ url('settings/mini_zoo') }}" class="btn-reset">Reset</a>
+            {% endif %}
+         </form>
       </div>
       <div>
          <button type="button" id="addBtn" style="padding: 10px 20px; border-radius: 8px; border: none; background: #d4b15a; color: #102417; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(212, 177, 90, 0.2);">
@@ -62,6 +149,10 @@
    <p>Data Mini Zoo belum tersedia.</p>
    {% else %}
    <div class="table-responsive" style="overflow-x: auto; background: rgba(16, 36, 23, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;">
+      <div style="margin-bottom:8px; color:#e8cc7a; font-size:0.9rem;">
+         Menampilkan {{ ((currentPage - 1) * perPage) + 1 }} – {{ ((currentPage - 1) * perPage) + miniZooList|length }} dari
+         {{ totalData }} data
+      </div>
       <table class="table table-sm text-white" style="width:100%; border-collapse: collapse;">
          <thead>
             <tr style="background: rgba(0,0,0,0.2);">
@@ -108,6 +199,34 @@
          </tbody>
       </table>
    </div>
+   <!-- Pagination Controls -->
+      <div style="display:flex; justify-content:center; align-items:center; margin-top:12px; gap:8px;">
+         {% set prevPage = currentPage > 1 ? currentPage - 1 : 1 %}
+         {% set nextPage = currentPage < totalPages ? currentPage + 1 : totalPages %}
+         
+         {% if currentPage == 1 %} 
+            <span class="pagination-link disabled">Previous</span>
+         {% else %}
+            <a href="{{ url('settings/mini_zoo') }}?{{ http_build_query({'search': search, 'page': prevPage, 'per_page': perPage}) }}"
+               class="pagination-link">Previous</a>
+         {% endif %}
+         
+         {% for i in 1..totalPages %}
+            {% if i == currentPage %}
+               <span class="pagination-link active">{{ i }}</span>
+            {% else %}
+               <a href="{{ url('settings/mini_zoo') }}?{{ http_build_query({'search': search, 'page': i, 'per_page': perPage}) }}"
+                  class="pagination-link">{{ i }}</a>
+            {% endif %}
+         {% endfor %}
+         
+         {% if currentPage == totalPages %}
+            <span class="pagination-link disabled">Next</span>
+         {% else %}
+            <a href="{{ url('settings/mini_zoo') }}?{{ http_build_query({'search': search, 'page': nextPage, 'per_page': perPage}) }}"
+               class="pagination-link">Next</a>
+         {% endif %}
+      </div>
    {% endif %}
 </section>
 
