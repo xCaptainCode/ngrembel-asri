@@ -1,4 +1,4 @@
--- Active: 1776057900509@@192.168.1.3@5432@ngrembel_asri@public
+-- Active: 1779269040582@@localhost@5432@ngrembel_asri@public
 -- DROP TABLE IF EXISTS settings CASCADE;
 -- resert sequence
 -- ALTER SEQUENCE setting RESTART WITH 1;
