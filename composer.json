@@ -3,6 +3,7 @@
         "fahriztx/zksoapphp": "^1.0",
         "firebase/php-jwt": "^6.4",
         "mike42/escpos-php": "^4.0",
-        "vlucas/phpdotenv": "^5.6"
+        "vlucas/phpdotenv": "^5.6",
+        "phpmailer/phpmailer": "^7.1"
     }
 }

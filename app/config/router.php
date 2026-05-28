@@ -85,6 +85,26 @@ $router->add("/login/forgot",[
     "action"     => "forgot",
 ]);
 
+$router->addGet("/lupa-password", [
+    "controller" => "login",
+    "action"     => "forgot",
+]);
+
+$router->addPost("/lupa-password", [
+    "controller" => "login",
+    "action"     => "kirimLink",
+]);
+
+$router->addGet("/reset-password", [
+    "controller" => "login",
+    "action"     => "tampilkanForm",
+]);
+
+$router->addPost("/reset-password", [
+    "controller" => "login",
+    "action"     => "prosesReset",
+]);
+
 $router->add("/login/logout",[
     "controller" => "login",
     "action"     => "logout",
@@ -187,6 +207,26 @@ if (isset($_SESSION['id'])) {
     $router->add("/login/forgot",[
         "controller" => "login", 
         "action"     => "forgot",
+    ]);
+
+    $router->addGet("/lupa-password", [
+        "controller" => "login",
+        "action"     => "forgot",
+    ]);
+
+    $router->addPost("/lupa-password", [
+        "controller" => "login",
+        "action"     => "kirimLink",
+    ]);
+
+    $router->addGet("/reset-password", [
+        "controller" => "login",
+        "action"     => "tampilkanForm",
+    ]);
+
+    $router->addPost("/reset-password", [
+        "controller" => "login",
+        "action"     => "prosesReset",
     ]);
 
     $router->add("/login/logout",[
