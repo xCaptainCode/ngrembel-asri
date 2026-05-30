@@ -40,9 +40,30 @@ $router->add("/wahana-fun-game", [
     "action"     => "fun_game",
 ]);
 
-$router->add("/galeri", [
-    "controller" => "galeri", 
-    "action"     => "index",
+// Gallery - Public
+$router->addGet('/galeri', [
+    'controller' => 'Gallery',
+    'action'     => 'index',
+]);
+$router->addGet('/galeri/detail/([a-zA-Z0-9\-]+)', [
+    'controller' => 'Gallery',
+    'action'     => 'detail',
+    'id'         => 1,
+]);
+$router->addGet('/galeri/download/([a-zA-Z0-9\-]+)', [
+    'controller' => 'Gallery',
+    'action'     => 'download',
+    'id'         => 1,
+]);
+
+// Gallery - Upload (hanya admin, lindungi dengan middleware/auth check di controller)
+$router->addGet('/galeri/upload', [
+    'controller' => 'Gallery',
+    'action'     => 'uploadForm',
+]);
+$router->addPost('/galeri/upload', [
+    'controller' => 'Gallery',
+    'action'     => 'uploadProcess',
 ]);
 
 $router->add("/mini-zoo", [
@@ -165,7 +186,7 @@ if (isset($_SESSION['id'])) {
     ]);
 
     $router->add("/galeri",[
-        "controller" => "galeri", 
+        "controller" => "Gallery", 
         "action"     => "index",
     ]);
 

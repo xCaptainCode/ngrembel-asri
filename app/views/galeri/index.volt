@@ -459,9 +459,9 @@
 <section id="gallery-section">
     <!-- DYNAMIC FILTER TABS -->
     <div class="filter-tabs-container r" id="filterTabs">
-        <button class="filter-tab active" data-filter="ALL">Semua</button>
-        <button class="filter-tab" data-filter="FOTO">Foto</button>
-        <button class="filter-tab" data-filter="VIDEO">Video</button>
+        <button class="filter-tab active" data-filter="all">Semua</button>
+        <button class="filter-tab" data-filter="photo">Foto</button>
+        <button class="filter-tab" data-filter="video">Video</button>
     </div>
 
     <!-- GALLERY GRID -->
@@ -477,38 +477,38 @@
     {% else %}
         <div class="masonry-grid" id="galleryGrid">
             {% for item in galleryList %}
-                {% set media_url = url(item['resource_url']) %}
-
                 <div class="masonry-card r" 
-                     data-media-type="{{ item['type_media'] }}" 
-                     data-src="{{ media_url }}"
-                     data-category="{{ item['category'] }}">
+                     data-media-type="{{ item['type'] }}" 
+                     data-id="{{ item['id'] }}">
                     
                     <div class="card-media-wrapper">
-                        {% if item['type_media'] == 'VIDEO' %}
-                            <video 
-                                class="masonry-img" 
-                                src="{{ media_url }}" 
-                                preload="metadata"
-                                muted
-                                playsinline
-                                style="background:#07190e;"
-                            ></video>
+                        {% if item['type'] == 'video' %}
+                            {% if item['poster_path'] is not empty %}
+                                <img class="masonry-img" src="{{ url(item['poster_path']) }}" alt="{{ item['title'] }}" style="background:#07190e;" />
+                            {% else %}
+                                <div class="masonry-img" style="aspect-ratio: 16/9; background:#07190e; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3);">
+                                    <i class="fas fa-video fa-2x"></i>
+                                </div>
+                            {% endif %}
                             <div class="video-play-indicator">
                                 <svg viewBox="0 0 24 24" width="18" height="18" fill="#d4b15a">
                                     <polygon points="8 5 19 12 8 19 8 5"></polygon>
                                 </svg>
                             </div>
                         {% else %}
-                            <img class="masonry-img" src="{{ media_url }}" alt="{{ item['title'] }}" />
+                            <img class="masonry-img" src="{{ url(item['thumb_sm_path']) }}" alt="{{ item['title'] }}" />
                         {% endif %}
                         
                         <!-- Media Type Badges -->
                         <div class="media-badge">
-                            {% if item['type_media'] == 'VIDEO' %}
+                            {% if item['type'] == 'video' %}
                                 <span class="badge-icon video">
                                     <i class="fas fa-video"></i>
-                                    Video
+                                    {% if item['duration_seconds'] > 0 %}
+                                        {{ sprintf("%02d:%02d", item['duration_seconds'] / 60, item['duration_seconds'] % 60) }}
+                                    {% else %}
+                                        Video
+                                    {% endif %}
                                 </span>
                             {% else %}
                                 <span class="badge-icon foto">
@@ -525,7 +525,7 @@
                         <!-- Hover Overlay & Media Indicators -->
                         <div class="media-overlay">
                             <div class="action-btn">
-                                {% if item['type_media'] == 'VIDEO' %}
+                                {% if item['type'] == 'video' %}
                                     <div class="play-btn-circle">
                                         <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
                                             <polygon points="8 5 19 12 8 19 8 5"></polygon>
@@ -547,7 +547,6 @@
 
                     <!-- Card Body -->
                     <div class="masonry-body">
-                        <span class="card-category">{{ item['category'] }}</span>
                         <h3 class="masonry-title">{{ item['title'] }}</h3>
                         {% if item['description'] %}
                             <p class="masonry-desc">{{ item['description'] }}</p>
@@ -580,11 +579,22 @@
         
         <!-- Caption Panel -->
         <div class="lightbox-caption-panel">
-            <div class="lightbox-info-row">
-                <span id="lightboxCategory" class="lightbox-badge">EVENT</span>
-                <span id="lightboxType" class="lightbox-badge type">FOTO</span>
+            <div class="lightbox-info-row" style="justify-content: space-between; align-items: center; width: 100%;">
+                <div style="display: flex; gap: 10px;">
+                    <span id="lightboxType" class="lightbox-badge type">FOTO</span>
+                </div>
+                <div>
+                    <a href="" id="lightboxDownloadBtn" class="btn-gold" style="padding: 6px 16px; font-size: 0.75rem; border-radius: 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; line-height: 1;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Unduh
+                    </a>
+                </div>
             </div>
-            <h3 id="lightboxTitle" class="lightbox-title">Title</h3>
+            <h3 id="lightboxTitle" class="lightbox-title" style="margin-top: 0.8rem;">Title</h3>
             <p id="lightboxDesc" class="lightbox-desc">Description</p>
         </div>
     </div>
@@ -602,10 +612,10 @@
         const lbVideoWrapper = document.getElementById('lightboxVideoWrapper');
         const lbVideo = document.getElementById('lightboxVideo');
         const lbClose = document.getElementById('lightboxCloseBtn');
-        const lbCategory = document.getElementById('lightboxCategory');
         const lbType = document.getElementById('lightboxType');
         const lbTitle = document.getElementById('lightboxTitle');
         const lbDesc = document.getElementById('lightboxDesc');
+        const lbDownloadBtn = document.getElementById('lightboxDownloadBtn');
         
         // Apply staggered animation delay to card elements on page load
         cards.forEach((card, idx) => {
@@ -625,7 +635,7 @@
                 cards.forEach(card => {
                     const cardType = card.getAttribute('data-media-type');
 
-                    if (filterValue === 'ALL' || cardType === filterValue) {
+                    if (filterValue === 'all' || cardType === filterValue) {
                         card.classList.remove('hidden');
                         setTimeout(() => {
                             card.style.opacity = '1';
@@ -648,46 +658,57 @@
                 const card = e.target.closest('.masonry-card');
                 if (!card) return;
 
-                const src = card.getAttribute('data-src');
-                const type = card.getAttribute('data-media-type');
-                const category = card.getAttribute('data-category');
-                const title = card.querySelector('.masonry-title').textContent;
-                const descEl = card.querySelector('.masonry-desc');
-                const desc = descEl ? descEl.textContent : '';
+                const mediaId = card.getAttribute('data-id');
 
-                // Populate lightbox content
-                lbTitle.textContent = title;
-                lbDesc.textContent = desc;
-                lbCategory.textContent = category;
-                lbType.textContent = type;
-
-                // Hide both content forms first
+                // Tampilkan loading state
+                lbTitle.textContent = 'Memuat...';
+                lbDesc.textContent = '';
+                lbType.textContent = '...';
+                
                 lbImg.classList.add('hidden');
                 lbVideoWrapper.classList.add('hidden');
                 lbVideo.pause();
                 lbVideo.src = '';
                 lbImg.src = '';
-
-                if (type === 'VIDEO') {
-                    lbVideo.src = src;
-                    lbVideoWrapper.classList.remove('hidden');
-                    lbVideo.load();
-                    // Play video automatically
-                    const playPromise = lbVideo.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            // Autoplay was prevented (e.g. browser security policy). Show controls for user manual play.
-                            console.log("Autoplay prevented, user interaction required: " + error);
-                        });
-                    }
-                } else {
-                    lbImg.src = src;
-                    lbImg.classList.remove('hidden');
-                }
+                lbDownloadBtn.href = '#';
 
                 // Activate Lightbox
                 lightbox.classList.add('active');
                 document.body.style.overflow = 'hidden';
+
+                // Fetch details via AJAX
+                fetch(`{{ url('galeri/detail/') }}${mediaId}`)
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.status === 'ok') {
+                            const data = res.data;
+                            lbTitle.textContent = data.title;
+                            lbDesc.textContent = data.description;
+                            lbType.textContent = data.type.toUpperCase();
+                            lbDownloadBtn.href = data.download_url;
+
+                            if (data.type === 'video') {
+                                lbVideo.src = data.media_url;
+                                lbVideoWrapper.classList.remove('hidden');
+                                lbVideo.load();
+                                const playPromise = lbVideo.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.catch(error => {
+                                        console.log("Autoplay prevented, user interaction required: " + error);
+                                    });
+                                }
+                            } else {
+                                lbImg.src = data.media_url;
+                                lbImg.classList.remove('hidden');
+                            }
+                        } else {
+                            lbTitle.textContent = 'Gagal memuat konten.';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching detail:', err);
+                        lbTitle.textContent = 'Kesalahan koneksi.';
+                    });
             });
         }
 
