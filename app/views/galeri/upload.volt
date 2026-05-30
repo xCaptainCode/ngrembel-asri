@@ -55,9 +55,9 @@
         margin-bottom: 0.5rem;
     }
 
-    .form-control {
+    .form-control-custom {
         width: 100%;
-        padding: 12px 16px;
+        padding: 10px;
         background: rgba(7, 25, 14, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 10px;
@@ -65,16 +65,17 @@
         font-family: 'Jost', sans-serif;
         font-size: 0.95rem;
         transition: all 0.3s ease;
+        
     }
 
-    .form-control:focus {
+    .form-control-custom:focus {
         outline: none;
         border-color: var(--gold, #c8a84b);
         box-shadow: 0 0 15px rgba(200, 168, 75, 0.25);
         background: rgba(7, 25, 14, 0.8);
     }
 
-    select.form-control option {
+    select.form-control-custom option {
         background: #0d2416;
         color: #fff;
     }
@@ -141,18 +142,18 @@
         <form id="uploadForm" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="title">Judul Media</label>
-                <input type="text" id="title" name="title" class="form-control" placeholder="Masukkan judul..." required />
+                <input type="text" id="title" name="title" class="form-control-custom" placeholder="Masukkan judul..." required />
             </div>
 
             <div class="form-group">
                 <label for="description">Deskripsi</label>
-                <textarea id="description" name="description" class="form-control" rows="3" placeholder="Masukkan deskripsi singkat..."></textarea>
+                <textarea id="description" name="description" class="form-control-custom" rows="3" placeholder="Masukkan deskripsi singkat..."></textarea>
             </div>
 
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <div class="form-group" style="flex: 1; min-width: 150px;">
                     <label for="category">Kategori</label>
-                    <select id="category" name="category" class="form-control" required>
+                    <select id="category" name="category" class="form-control-custom" required>
                         <option value="EVENT">EVENT</option>
                         <option value="WAHANA">WAHANA</option>
                         <option value="AREA">AREA</option>
@@ -161,7 +162,7 @@
 
                 <div class="form-group" style="flex: 1; min-width: 150px;">
                     <label for="type">Tipe Media</label>
-                    <select id="type" name="type" class="form-control" required>
+                    <select id="type" name="type" class="form-control-custom" required>
                         <option value="photo">Foto</option>
                         <option value="video">Video</option>
                     </select>
@@ -171,7 +172,7 @@
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <div class="form-group" style="flex: 1; min-width: 150px;">
                     <label for="is_active">Status Tampil</label>
-                    <select id="is_active" name="is_active" class="form-control" required>
+                    <select id="is_active" name="is_active" class="form-control-custom" required>
                         <option value="1">Aktif</option>
                         <option value="0">Sembunyikan</option>
                     </select>
@@ -179,15 +180,15 @@
 
                 <div class="form-group" style="flex: 1; min-width: 150px;">
                     <label for="sort_order">Urutan Tampil</label>
-                    <input type="number" id="sort_order" name="sort_order" class="form-control" value="0" min="0" required />
+                    <input type="number" id="sort_order" name="sort_order" class="form-control-custom" value="0" min="0" required />
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="media_file">Pilih File Media</label>
-                <input type="file" id="media_file" name="media_file" class="form-control" style="padding: 8px;" required />
+                <input type="file" id="media_file" name="media_file" class="form-control-custom" style="padding: 8px;" required />
                 <small id="fileHelpText" style="display: block; margin-top: 5px; color: rgba(255,255,255,0.45); font-size: 0.75rem;">
-                    Foto: JPG, PNG, WEBP (Maks 10MB) | Video: MP4, WEBM (Maks 200MB)
+                    Foto: JPG, PNG, WEBP (Maks 10MB) | Video: MP4, WEBM (Maks 100MB)
                 </small>
             </div>
 
@@ -214,19 +215,122 @@
         const progressBar = document.getElementById('progressBar');
         const progressStatus = document.getElementById('progressStatus');
 
+        // Hidden state for captured video poster & metadata
+        let capturedPosterDataUrl = null;
+        let capturedVideoDuration = null;
+        let capturedVideoWidth = null;
+        let capturedVideoHeight = null;
+
         // Dynamic file input restrictions based on selected type
         typeSelect.addEventListener('change', () => {
+            // Reset captured poster when type changes
+            capturedPosterDataUrl = null;
+            capturedVideoDuration = null;
+            capturedVideoWidth = null;
+            capturedVideoHeight = null;
+            fileInput.value = '';
+
             if (typeSelect.value === 'photo') {
                 fileInput.accept = 'image/jpeg,image/png,image/webp';
                 fileHelpText.textContent = 'Foto: JPG, PNG, WEBP (Maks 10MB)';
             } else {
                 fileInput.accept = 'video/mp4,video/webm,video/quicktime,video/x-m4v';
-                fileHelpText.textContent = 'Video: MP4, WEBM (Maks 200MB)';
+                fileHelpText.textContent = 'Video: MP4, WEBM (Maks 100MB)';
             }
         });
 
         // Set default accept attribute
         fileInput.accept = 'image/jpeg,image/png,image/webp';
+
+        /**
+         * Capture a poster frame from a video file using <video> + <canvas>.
+         * Returns a Promise that resolves with { posterDataUrl, duration, width, height }.
+         */
+        function captureVideoPoster(file) {
+            return new Promise((resolve, reject) => {
+                const videoEl = document.createElement('video');
+                videoEl.preload = 'auto';
+                videoEl.muted = true;
+                videoEl.playsInline = true;
+
+                const objectUrl = URL.createObjectURL(file);
+                videoEl.src = objectUrl;
+
+                // Timeout fallback if video fails to load
+                const timeout = setTimeout(() => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Video poster capture timed out'));
+                }, 15000);
+
+                videoEl.addEventListener('loadedmetadata', () => {
+                    // Seek to 1 second or 10% of duration, whichever is smaller
+                    const seekTime = Math.min(1, videoEl.duration * 0.1);
+                    videoEl.currentTime = seekTime;
+                });
+
+                videoEl.addEventListener('seeked', () => {
+                    clearTimeout(timeout);
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = videoEl.videoWidth;
+                        canvas.height = videoEl.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+                        const posterDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                        resolve({
+                            posterDataUrl: posterDataUrl,
+                            duration: videoEl.duration,
+                            width: videoEl.videoWidth,
+                            height: videoEl.videoHeight
+                        });
+                    } catch (e) {
+                        reject(e);
+                    } finally {
+                        URL.revokeObjectURL(objectUrl);
+                    }
+                });
+
+                videoEl.addEventListener('error', () => {
+                    clearTimeout(timeout);
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Failed to load video for poster capture'));
+                });
+            });
+        }
+
+        // When a video file is selected, auto-capture the poster frame
+        fileInput.addEventListener('change', async () => {
+            // Reset poster data
+            capturedPosterDataUrl = null;
+            capturedVideoDuration = null;
+            capturedVideoWidth = null;
+            capturedVideoHeight = null;
+
+            const file = fileInput.files[0];
+            if (!file || typeSelect.value !== 'video') return;
+
+            // Show a loading indicator
+            fileHelpText.innerHTML = '<span style="color: var(--gold, #c8a84b);">⏳ Memproses preview video...</span>';
+            btnSubmit.disabled = true;
+
+            try {
+                const result = await captureVideoPoster(file);
+                capturedPosterDataUrl = result.posterDataUrl;
+                capturedVideoDuration = result.duration;
+                capturedVideoWidth = result.width;
+                capturedVideoHeight = result.height;
+
+                const durationFormatted = new Date(result.duration * 1000).toISOString().substr(11, 8);
+                fileHelpText.innerHTML = `<span style="color: #6bcf7f;">✓ Poster berhasil diambil</span> — ${result.width}×${result.height}, durasi: ${durationFormatted}`;
+            } catch (err) {
+                console.warn('Poster capture failed:', err);
+                fileHelpText.innerHTML = '<span style="color: #e8a84b;">⚠ Gagal membuat preview otomatis — video tetap bisa diupload</span>';
+            } finally {
+                btnSubmit.disabled = false;
+            }
+        });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -236,12 +340,12 @@
 
             // Validate size
             const type = typeSelect.value;
-            const maxSize = type === 'photo' ? 10 * 1024 * 1024 : 200 * 1024 * 1024;
+            const maxSize = type === 'photo' ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
             if (file.size > maxSize) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Ukuran file terlalu besar',
-                    text: type === 'photo' ? 'Ukuran foto maksimal adalah 10MB.' : 'Ukuran video maksimal adalah 200MB.',
+                    text: type === 'photo' ? 'Ukuran foto maksimal adalah 10MB.' : 'Ukuran video maksimal adalah 100MB.',
                     confirmButtonColor: '#d4b15a'
                 });
                 return;
@@ -283,7 +387,7 @@
                         text: 'Media berhasil diupload dan diproses.',
                         confirmButtonColor: '#d4b15a'
                     }).then(() => {
-                        window.location.href = '{{ url("galeri") }}';
+                        window.location.href = '{{ url("settings/galeri") }}';
                     });
                 } else {
                     btnSubmit.disabled = false;
@@ -313,7 +417,25 @@
             };
 
             const formData = new FormData(form);
+
+            // Append captured video poster and metadata if available
+            if (type === 'video') {
+                if (capturedPosterDataUrl) {
+                    formData.append('poster_data', capturedPosterDataUrl);
+                }
+                if (capturedVideoDuration !== null) {
+                    formData.append('video_duration', capturedVideoDuration);
+                }
+                if (capturedVideoWidth !== null) {
+                    formData.append('video_width', capturedVideoWidth);
+                }
+                if (capturedVideoHeight !== null) {
+                    formData.append('video_height', capturedVideoHeight);
+                }
+            }
+
             xhr.send(formData);
         });
     });
 </script>
+

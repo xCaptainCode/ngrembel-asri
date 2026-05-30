@@ -172,8 +172,8 @@ class GalleryController extends Controller {
             if (!in_array($mimeType, $allowedVideoMimes, true)) {
                 return $this->jsonResponse(['status' => 'error', 'message' => 'Invalid video type. Allowed: MP4, WEBM'], 400);
             }
-            if ($file['size'] > 200 * 1024 * 1024) { // 200MB
-                return $this->jsonResponse(['status' => 'error', 'message' => 'Video size exceeds 200MB limit'], 400);
+            if ($file['size'] > 100 * 1024 * 1024) { // 100MB
+                return $this->jsonResponse(['status' => 'error', 'message' => 'Video size exceeds 100MB limit'], 400);
             }
         } else {
             return $this->jsonResponse(['status' => 'error', 'message' => 'Invalid media type'], 400);
@@ -226,59 +226,67 @@ class GalleryController extends Controller {
                 $thumbMdPath = 'storage/thumbnails/md/' . $thumbMdFilename;
 
             } elseif ($type === 'video') {
-                // Native ffmpeg/ffprobe via shell_exec (no PHP library needed)
-                try {
-                    // Extract frame at 1s as poster
-                    $tempJpg = sys_get_temp_dir() . '/' . uniqid('poster_', true) . '.jpg';
-                    $escapedInput = escapeshellarg($absoluteOriginalPath);
-                    $escapedOutput = escapeshellarg($tempJpg);
-                    shell_exec("ffmpeg -y -i {$escapedInput} -ss 00:00:01 -vframes 1 {$escapedOutput} 2>&1");
+                // Process client-side poster frame (captured via <canvas> in browser)
+                $posterDataUrl = $this->request->getPost('poster_data');
+                if ($posterDataUrl && preg_match('/^data:image\/(png|jpeg|webp);base64,/', $posterDataUrl, $matches)) {
+                    try {
+                        $base64Data = preg_replace('/^data:image\/\w+;base64,/', '', $posterDataUrl);
+                        $binaryData = base64_decode($base64Data);
 
-                    if (file_exists($tempJpg) && filesize($tempJpg) > 0) {
-                        $posterFilename = $uniqueName . '.webp';
-                        $absolutePoster = $this->posterDir . $posterFilename;
+                        if ($binaryData !== false && strlen($binaryData) > 0) {
+                            $posterFilename = $uniqueName . '_poster.webp';
+                            $absolutePoster = $this->posterDir . $posterFilename;
 
-                        Image::make($tempJpg)->encode('webp', 80)->save($absolutePoster);
-                        @unlink($tempJpg);
+                            // Use Intervention Image to convert the poster frame to webp
+                            $posterImg = Image::make($binaryData);
+                            $posterImg->resize(1280, null, function ($constraint) {
+                                $constraint->aspectRatio();
+                                $constraint->upsize();
+                            })->encode('webp', 80)->save($absolutePoster);
 
-                        $posterPath = 'storage/thumbnails/posters/' . $posterFilename;
-                        $thumbSmPath = $posterPath;
-                        $thumbMdPath = $posterPath;
-                    }
+                            $posterPath = 'storage/thumbnails/posters/' . $posterFilename;
 
-                    // Get duration and dimensions via ffprobe
-                    $probeJson = shell_exec("ffprobe -v quiet -print_format json -show_format -show_streams {$escapedInput} 2>&1");
-                    if ($probeJson) {
-                        $probeData = json_decode($probeJson, true);
-                        if (isset($probeData['format']['duration'])) {
-                            $durationSeconds = (int)$probeData['format']['duration'];
+                            // Also create SM thumbnail from poster (max 600px)
+                            $thumbSmFilename = $uniqueName . '_sm.webp';
+                            $absoluteThumbSm = $this->thumbSmDir . $thumbSmFilename;
+                            $posterImgSm = Image::make($binaryData);
+                            $posterImgSm->resize(600, null, function ($constraint) {
+                                $constraint->aspectRatio();
+                                $constraint->upsize();
+                            })->encode('webp', 75)->save($absoluteThumbSm);
+                            $thumbSmPath = 'storage/thumbnails/sm/' . $thumbSmFilename;
+
+                            // MD thumbnail reuses the poster
+                            $thumbMdPath = $posterPath;
                         }
-                        // Find first video stream for dimensions
-                        if (isset($probeData['streams']) && is_array($probeData['streams'])) {
-                            foreach ($probeData['streams'] as $stream) {
-                                if (isset($stream['codec_type']) && $stream['codec_type'] === 'video') {
-                                    $width = isset($stream['width']) ? (int)$stream['width'] : null;
-                                    $height = isset($stream['height']) ? (int)$stream['height'] : null;
-                                    break;
-                                }
-                            }
-                        }
+                    } catch (\Exception $e) {
+                        error_log("Poster processing failed: " . $e->getMessage());
                     }
-                } catch (\Exception $e) {
-                    error_log("FFmpeg execution failed: " . $e->getMessage());
-                    // Null values are supported by the table columns
-                    $posterPath = null;
-                    $durationSeconds = null;
+                }
+
+                // Accept video metadata from client-side (captured via HTML5 <video> element)
+                $clientDuration = $this->request->getPost('video_duration');
+                $clientWidth = $this->request->getPost('video_width');
+                $clientHeight = $this->request->getPost('video_height');
+
+                if ($clientDuration !== null && $clientDuration !== '' && is_numeric($clientDuration)) {
+                    $durationSeconds = (int)round((float)$clientDuration);
+                }
+                if ($clientWidth !== null && $clientWidth !== '' && is_numeric($clientWidth)) {
+                    $width = (int)$clientWidth;
+                }
+                if ($clientHeight !== null && $clientHeight !== '' && is_numeric($clientHeight)) {
+                    $height = (int)$clientHeight;
                 }
             }
 
             // Save to DB
             $sql = "INSERT INTO media_gallery (
-                        title, description, type, original_filename, original_path,
+                        title, description, category, type, original_filename, original_path,
                         original_size, mime_type, thumb_sm_path, thumb_md_path,
                         poster_path, duration_seconds, width, height, is_active, sort_order, create_by
                     ) VALUES (
-                        :title, :description, :type, :original_filename, :original_path,
+                        :title, :description, :category, :type, :original_filename, :original_path,
                         :original_size, :mime_type, :thumb_sm_path, :thumb_md_path,
                         :poster_path, :duration_seconds, :width, :height, :is_active, :sort_order, :create_by
                     )";
@@ -286,6 +294,7 @@ class GalleryController extends Controller {
             $this->db->execute($sql, [
                 'title' => $title,
                 'description' => $description === '' ? null : $description,
+                'category' => $category,
                 'type' => $type,
                 'original_filename' => $file['name'],
                 'original_path' => $originalPath,

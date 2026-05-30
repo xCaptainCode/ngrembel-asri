@@ -141,7 +141,7 @@
          <p style="margin: 0;">Klik pada baris tabel untuk meng-edit data galeri.</p>
       </div>
       <div>
-         <button type="button" id="addBtn"
+         <a href="{{ url('galeri/upload')  }}" type="button"
             style="padding: 10px 20px; border-radius: 8px; border: none; background: #d4b15a; color: #102417; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(212, 177, 90, 0.2);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                style="vertical-align: middle;">
@@ -149,7 +149,7 @@
                <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Tambah Galeri
-         </button>
+         </a>
       </div>
    </div>
 

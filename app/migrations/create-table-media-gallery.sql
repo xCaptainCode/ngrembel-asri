@@ -3,6 +3,7 @@ CREATE TABLE media_gallery (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
     description TEXT,
+    category VARCHAR(255) NOT NULL,
     type VARCHAR(10) NOT NULL CHECK (type IN ('photo', 'video')),
     -- File original (for download)
     original_filename VARCHAR(255) NOT NULL,
@@ -31,6 +32,7 @@ CREATE TABLE media_gallery (
     update_by UUID
 );
 
+CREATE INDEX idx_mg_category ON media_gallery(category);
 CREATE INDEX idx_mg_type     ON media_gallery(type);
 CREATE INDEX idx_mg_active   ON media_gallery(is_active, sort_order, created_at);
 
