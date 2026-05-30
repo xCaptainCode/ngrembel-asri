@@ -66,3 +66,4 @@ coverage/
 public/images/*
 public/videos/*
 public/plugins/*
+public/storage/*
