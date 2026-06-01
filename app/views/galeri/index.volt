@@ -3,7 +3,7 @@
        GALLERY STYLES & LAYOUT SYSTEM
        ═══════════════════════════════════════════ */
     #gallery-section {
-        padding: 2rem 5% 8rem;
+        padding: 2rem 3% 8rem;
         background: var(--forest, #07190e);
         min-height: 100vh;
     }
@@ -11,10 +11,15 @@
     /* Responsive Masonry Grid */
     .masonry-grid {
         column-count: 3;
-        column-gap: 1.5rem;
+        column-gap: 1rem;
         width: 100%;
         margin-top: 1rem;
         transition: all 0.4s ease;
+    }
+    .masonry-grid.js-masonry-enabled {
+        column-count: initial;
+        column-gap: 0;
+        position: relative;
     }
 
     .masonry-card {
@@ -45,6 +50,11 @@
         opacity: 0;
         transform: scale(0.85) translateY(15px);
         display: none !important;
+    }
+    .masonry-grid.js-masonry-enabled .masonry-card {
+        position: absolute;
+        margin-bottom: 0;
+        will-change: transform;
     }
 
     /* Media Wrapper & Hover Interactions */
@@ -389,7 +399,7 @@
     @media (max-width: 992px) {
         .masonry-grid {
             column-count: 2;
-            column-gap: 1.25rem;
+            column-gap: 1rem;
         }
         .lightbox-content-container {
             max-width: 100%;
@@ -619,9 +629,88 @@
         
         // Apply staggered animation delay to card elements on page load
         cards.forEach((card, idx) => {
-            card.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            // card.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             card.style.transitionDelay = `${(idx % 12) * 0.04}s`;
         });
+        
+        if (!grid || cards.length === 0) {
+            return;
+        }
+
+        // ═══════════════════════════════════════════
+        // MASONRY LAYOUT ENGINE
+        // ═══════════════════════════════════════════
+        const getColumnCount = () => {
+            if (window.innerWidth <= 576) return 1;
+            if (window.innerWidth <= 992) return 2;
+            return 3;
+        };
+
+        const getGap = () => (window.innerWidth <= 992 ? 20 : 24);
+
+        const layoutMasonry = () => {
+            if (!grid) return;
+            grid.classList.add('js-masonry-enabled');
+
+            const visibleCards = [...cards].filter(c => !c.classList.contains('hidden'));
+            const columnCount = getColumnCount();
+            const gap = getGap();
+            const gridWidth = grid.clientWidth;
+            const columnWidth = (gridWidth - (gap * (columnCount - 1))) / columnCount;
+            const columnHeights = Array(columnCount).fill(0);
+
+            visibleCards.forEach((card) => {
+                card.style.width = `${columnWidth}px`;
+                card.style.left = '0px';
+                card.style.top = '0px';
+            });
+
+            visibleCards.forEach((card) => {
+                const minHeight = Math.min(...columnHeights);
+                const targetColumn = columnHeights.indexOf(minHeight);
+                const x = targetColumn * (columnWidth + gap);
+                const y = minHeight;
+
+                card.style.left = `${x}px`;
+                card.style.top = `${y}px`;
+                columnHeights[targetColumn] = minHeight + card.offsetHeight + gap;
+            });
+
+            grid.style.height = `${Math.max(...columnHeights)}px`;
+        };
+
+        let resizeTimeout = null;
+        const relayout = () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(layoutMasonry, 100);
+        };
+
+        window.addEventListener('resize', relayout);
+
+        // Wait for all images to load before initial masonry layout
+        if (grid) {
+            const images = grid.querySelectorAll('img');
+            let pendingImages = images.length;
+            if (pendingImages === 0) {
+                layoutMasonry();
+            } else {
+                const onImageDone = () => {
+                    pendingImages -= 1;
+                    if (pendingImages <= 0) {
+                        layoutMasonry();
+                    }
+                };
+
+                images.forEach((img) => {
+                    if (img.complete) {
+                        onImageDone();
+                    } else {
+                        img.addEventListener('load', onImageDone, { once: true });
+                        img.addEventListener('error', onImageDone, { once: true });
+                    }
+                });
+            }
+        }
 
         // 1. FILTERING LOGIC
         tabs.forEach(tab => {
@@ -649,6 +738,9 @@
                         }, 350);
                     }
                 });
+
+                // Re-layout masonry after filter animations complete
+                setTimeout(layoutMasonry, 400);
             });
         });
 
