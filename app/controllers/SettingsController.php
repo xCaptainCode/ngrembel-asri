@@ -1,8 +1,21 @@
 <?php
 
 use Phalcon\Mvc\Controller;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class SettingsController extends Controller {
+   private $galleryOriginalDir;
+   private $galleryThumbSmDir;
+   private $galleryThumbMdDir;
+   private $galleryPosterDir;
+
+   public function initialize() {
+      $this->galleryOriginalDir = BASE_PATH . '/public/storage/originals/';
+      $this->galleryThumbSmDir  = BASE_PATH . '/public/storage/thumbnails/sm/';
+      $this->galleryThumbMdDir  = BASE_PATH . '/public/storage/thumbnails/md/';
+      $this->galleryPosterDir   = BASE_PATH . '/public/storage/thumbnails/posters/';
+   }
+
    public function beforeExecuteRoute() {
       $role = strtolower((string) $this->session->get('role'));
       if (! $this->session->get('id') || $role !== 'admin') {
@@ -2276,31 +2289,30 @@ class SettingsController extends Controller {
    }
    public function galeriAction() {
       $search = trim((string) $this->request->getQuery('search', 'string', ''));
-      $currentPage = (int) $this->request->getQuery('page', 'int', 1);
-      if ($currentPage < 1) {
-         $currentPage = 1;
-      }
-
+      $currentPage = max(1, (int) $this->request->getQuery('page', 'int', 1));
       $perPage = 10;
+
       $bindParams = [];
       $whereSql = '';
+
       if ($search !== '') {
          $whereSql = " WHERE (
             g.title ILIKE :search
             OR COALESCE(g.description, '') ILIKE :search
             OR g.category ILIKE :search
-            OR g.type_media ILIKE :search
+            OR g.type ILIKE :search
          )";
          $bindParams['search'] = '%' . $search . '%';
       }
 
       $countRow = $this->db->fetchOne(
-         "SELECT COUNT(*) AS total_items FROM gallery g" . $whereSql,
+         "SELECT COUNT(*) AS total_items FROM media_gallery g" . $whereSql,
          \Phalcon\Db::FETCH_ASSOC,
          $bindParams
       );
       $totalItems = isset($countRow['total_items']) ? (int) $countRow['total_items'] : 0;
       $totalPages = $totalItems > 0 ? (int) ceil($totalItems / $perPage) : 1;
+
       if ($currentPage > $totalPages) {
          $currentPage = $totalPages;
       }
@@ -2314,7 +2326,7 @@ class SettingsController extends Controller {
          "SELECT g.*,
                 m_created.nama AS created_by_nama,
                 m_updated.nama AS updated_by_nama
-          FROM gallery g
+          FROM media_gallery g
           LEFT JOIN members m_created ON CAST(g.create_by AS TEXT) = CAST(m_created.id AS TEXT)
           LEFT JOIN members m_updated ON CAST(g.update_by AS TEXT) = CAST(m_updated.id AS TEXT)
           {$whereSql}
@@ -2335,95 +2347,344 @@ class SettingsController extends Controller {
       $this->session->remove('gallery_update_success');
       $this->session->remove('gallery_update_error');
    }
+
+   public function edit_galeriAction() {
+      $id = trim((string) $this->dispatcher->getParam('id', 'string'));
+
+      if ($id === '') {
+         $this->session->set('gallery_update_error', 'ID galeri tidak valid.');
+         return $this->response->redirect('settings/galeri');
+      }
+
+      $galleryItem = $this->db->fetchOne(
+         "SELECT g.*,
+                 m_created.nama AS created_by_nama,
+                 m_updated.nama AS updated_by_nama
+          FROM media_gallery g
+          LEFT JOIN members m_created ON CAST(g.create_by AS TEXT) = CAST(m_created.id AS TEXT)
+          LEFT JOIN members m_updated ON CAST(g.update_by AS TEXT) = CAST(m_updated.id AS TEXT)
+          WHERE g.id = :id
+          LIMIT 1",
+         \Phalcon\Db::FETCH_ASSOC,
+         ['id' => $id]
+      );
+
+      if (! $galleryItem) {
+         $this->session->set('gallery_update_error', 'Data galeri tidak ditemukan.');
+         return $this->response->redirect('settings/galeri');
+      }
+
+      $this->view->setVar('galleryItem', $galleryItem);
+      $this->view->setVar('updateSuccess', $this->session->get('gallery_update_success'));
+      $this->view->setVar('updateError', $this->session->get('gallery_update_error'));
+      $this->session->remove('gallery_update_success');
+      $this->session->remove('gallery_update_error');
+      $this->view->pick('settings/galeri_edit');
+   }
+
    public function update_galeriAction() {
       $this->view->disable();
 
+      $isAjax = $this->request->isAjax();
+      $respondError = function (string $message, string $redirectUrl = 'settings/galeri', int $statusCode = 400) use ($isAjax) {
+         if ($isAjax) {
+            return $this->jsonResponse(['status' => 'error', 'message' => $message], $statusCode);
+         }
+
+         $this->session->set('gallery_update_error', $message);
+         return $this->response->redirect($redirectUrl);
+      };
+      $respondSuccess = function (string $message, string $redirectUrl = 'settings/galeri') use ($isAjax) {
+         if ($isAjax) {
+            return $this->jsonResponse(['status' => 'success', 'message' => $message], 200);
+         }
+
+         $this->session->set('gallery_update_success', $message);
+         return $this->response->redirect($redirectUrl);
+      };
+
       if (! $this->request->isPost()) {
-         return $this->response->redirect('settings/galeri');
+         return $respondError('Invalid request', 'settings/galeri', 405);
       }
 
-      $id = (string) $this->request->getPost('id', 'string');
+      $id = trim((string) $this->request->getPost('id', 'string'));
       $title = trim((string) $this->request->getPost('title', 'string'));
       $description = trim((string) $this->request->getPost('description', 'string'));
       $category = strtoupper(trim((string) $this->request->getPost('category', 'string')));
-      $typeMedia = strtoupper(trim((string) $this->request->getPost('type_media', 'string')));
-      $isActive = $this->request->getPost('is_active') ? true : false;
+      $type = strtolower(trim((string) $this->request->getPost('type', 'string')));
+      $isActive = in_array((string) $this->request->getPost('is_active', 'string'), ['1', 'true', 'on'], true);
+      $sortOrder = (int) $this->request->getPost('sort_order', 'int', 0);
 
       $allowedCategory = ['WAHANA', 'AREA', 'EVENT'];
-      $allowedTypeMedia = ['VIDEO', 'FOTO'];
+      $allowedType = ['photo', 'video'];
 
-      if ($id === '' || $title === '' || ! in_array($category, $allowedCategory, true) || ! in_array($typeMedia, $allowedTypeMedia, true)) {
-         $this->session->set('gallery_update_error', 'Data galeri tidak valid.');
-         return $this->response->redirect('settings/galeri');
+      if ($id === '' || $title === '' || ! in_array($category, $allowedCategory, true) || ! in_array($type, $allowedType, true)) {
+         return $respondError('Data galeri tidak valid.', 'settings/edit_galeri/' . $id);
       }
+
+      $currentGallery = $this->db->fetchOne(
+         "SELECT * FROM media_gallery WHERE id = :id LIMIT 1",
+         \Phalcon\Db::FETCH_ASSOC,
+         ['id' => $id]
+      );
+
+      if (! $currentGallery) {
+         return $respondError('Data galeri tidak ditemukan.', 'settings/galeri');
+      }
+
+      $currentType = strtolower((string) ($currentGallery['type'] ?? ''));
+      $fileInfo = $_FILES['media_file'] ?? null;
+      $hasNewFile = is_array($fileInfo) && (int) ($fileInfo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+      if (! $hasNewFile && $type !== $currentType) {
+         return $respondError('Untuk mengubah tipe media, unggah file baru terlebih dahulu.', 'settings/edit_galeri/' . $id);
+      }
+
+      $fileChanged = false;
+      $absoluteOriginalPath = null;
+      $absoluteThumbSm = null;
+      $absoluteThumbMd = null;
+      $absolutePoster = null;
+
+      $newOriginalPath = (string) ($currentGallery['original_path'] ?? '');
+      $newOriginalFilename = (string) ($currentGallery['original_filename'] ?? '');
+      $newOriginalSize = (int) ($currentGallery['original_size'] ?? 0);
+      $newMimeType = (string) ($currentGallery['mime_type'] ?? '');
+      $newThumbSmPath = $currentGallery['thumb_sm_path'] ?? null;
+      $newThumbMdPath = $currentGallery['thumb_md_path'] ?? null;
+      $newPosterPath = $currentGallery['poster_path'] ?? null;
+      $newDurationSeconds = $currentGallery['duration_seconds'] ?? null;
+      $newWidth = $currentGallery['width'] ?? null;
+      $newHeight = $currentGallery['height'] ?? null;
 
       try {
-         $currentGallery = $this->db->fetchOne(
-            "SELECT resource_url FROM gallery WHERE id = :id LIMIT 1",
-            \Phalcon\Db::FETCH_ASSOC,
-            ['id' => $id]
+         if ($hasNewFile) {
+            $uploadError = (int) ($fileInfo['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($uploadError !== UPLOAD_ERR_OK) {
+               return $respondError('Upload file gagal. Kode error: ' . $uploadError, 'settings/edit_galeri/' . $id);
+            }
+
+            $tmpName = (string) ($fileInfo['tmp_name'] ?? '');
+            $originalName = (string) ($fileInfo['name'] ?? '');
+            $fileSize = (int) ($fileInfo['size'] ?? 0);
+
+            if ($tmpName === '' || ! is_uploaded_file($tmpName) || $fileSize <= 0) {
+               return $respondError('File media tidak valid.', 'settings/edit_galeri/' . $id);
+            }
+
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo ? finfo_file($finfo, $tmpName) : false;
+            if ($finfo) {
+               finfo_close($finfo);
+            }
+
+            if (! is_string($mimeType) || $mimeType === '') {
+               return $respondError('Gagal membaca tipe file media.', 'settings/edit_galeri/' . $id);
+            }
+
+            $allowedPhotoMimes = ['image/jpeg', 'image/png', 'image/webp'];
+            $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'];
+
+            if ($type === 'photo') {
+               if (! in_array($mimeType, $allowedPhotoMimes, true)) {
+                  return $respondError('Format foto tidak didukung. Gunakan JPG, PNG, atau WEBP.', 'settings/edit_galeri/' . $id);
+               }
+               if ($fileSize > (10 * 1024 * 1024)) {
+                  return $respondError('Ukuran foto maksimal 10MB.', 'settings/edit_galeri/' . $id);
+               }
+            } else {
+               if (! in_array($mimeType, $allowedVideoMimes, true)) {
+                  return $respondError('Format video tidak didukung. Gunakan MP4, WEBM, atau MOV.', 'settings/edit_galeri/' . $id);
+               }
+               if ($fileSize > (100 * 1024 * 1024)) {
+                  return $respondError('Ukuran video maksimal 100MB.', 'settings/edit_galeri/' . $id);
+               }
+            }
+
+            if (! is_dir($this->galleryOriginalDir)) {
+               @mkdir($this->galleryOriginalDir, 0755, true);
+            }
+            if (! is_dir($this->galleryThumbSmDir)) {
+               @mkdir($this->galleryThumbSmDir, 0755, true);
+            }
+            if (! is_dir($this->galleryThumbMdDir)) {
+               @mkdir($this->galleryThumbMdDir, 0755, true);
+            }
+            if (! is_dir($this->galleryPosterDir)) {
+               @mkdir($this->galleryPosterDir, 0755, true);
+            }
+
+            $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+            if ($extension === '') {
+               $extension = $type === 'photo' ? 'jpg' : 'mp4';
+            }
+
+            $uniqueName = uniqid('', true) . '_' . time();
+            $originalFilename = $uniqueName . '.' . $extension;
+            $newOriginalPath = 'storage/originals/' . $originalFilename;
+            $absoluteOriginalPath = $this->galleryOriginalDir . $originalFilename;
+
+            if (! move_uploaded_file($tmpName, $absoluteOriginalPath)) {
+               return $respondError('Gagal menyimpan file media ke server.', 'settings/edit_galeri/' . $id);
+            }
+
+            $newOriginalFilename = $originalFilename;
+            $newOriginalSize = $fileSize;
+            $newMimeType = $mimeType;
+            $newThumbSmPath = null;
+            $newThumbMdPath = null;
+            $newPosterPath = null;
+            $newDurationSeconds = null;
+            $newWidth = null;
+            $newHeight = null;
+            $fileChanged = true;
+
+            if ($type === 'photo') {
+               $img = Image::make($absoluteOriginalPath);
+               $newWidth = $img->width();
+               $newHeight = $img->height();
+
+               $thumbSmFilename = $uniqueName . '_sm.webp';
+               $absoluteThumbSm = $this->galleryThumbSmDir . $thumbSmFilename;
+               $img->resize(600, null, function ($constraint) {
+                  $constraint->aspectRatio();
+                  $constraint->upsize();
+               })->encode('webp', 80)->save($absoluteThumbSm);
+               $newThumbSmPath = 'storage/thumbnails/sm/' . $thumbSmFilename;
+
+               $thumbMdFilename = $uniqueName . '_md.webp';
+               $absoluteThumbMd = $this->galleryThumbMdDir . $thumbMdFilename;
+               $imgMd = Image::make($absoluteOriginalPath);
+               $imgMd->resize(1200, null, function ($constraint) {
+                  $constraint->aspectRatio();
+                  $constraint->upsize();
+               })->encode('webp', 85)->save($absoluteThumbMd);
+               $newThumbMdPath = 'storage/thumbnails/md/' . $thumbMdFilename;
+            } else {
+               $posterDataUrl = (string) $this->request->getPost('poster_data');
+               if ($posterDataUrl !== '' && preg_match('/^data:image\/(png|jpeg|webp);base64,/', $posterDataUrl)) {
+                  $base64Data = preg_replace('/^data:image\/\w+;base64,/', '', $posterDataUrl);
+                  $binaryData = base64_decode($base64Data);
+
+                  if ($binaryData !== false && strlen($binaryData) > 0) {
+                     $posterFilename = $uniqueName . '_poster.webp';
+                     $absolutePoster = $this->galleryPosterDir . $posterFilename;
+
+                     $posterImg = Image::make($binaryData);
+                     $posterImg->resize(1280, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                     })->encode('webp', 80)->save($absolutePoster);
+                     $newPosterPath = 'storage/thumbnails/posters/' . $posterFilename;
+
+                     $thumbSmFilename = $uniqueName . '_sm.webp';
+                     $absoluteThumbSm = $this->galleryThumbSmDir . $thumbSmFilename;
+                     $posterImgSm = Image::make($binaryData);
+                     $posterImgSm->resize(600, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                     })->encode('webp', 75)->save($absoluteThumbSm);
+                     $newThumbSmPath = 'storage/thumbnails/sm/' . $thumbSmFilename;
+                     $newThumbMdPath = $newPosterPath;
+                  }
+               }
+
+               $clientDuration = $this->request->getPost('video_duration');
+               $clientWidth = $this->request->getPost('video_width');
+               $clientHeight = $this->request->getPost('video_height');
+
+               if ($clientDuration !== null && $clientDuration !== '' && is_numeric($clientDuration)) {
+                  $newDurationSeconds = (int) round((float) $clientDuration);
+               }
+               if ($clientWidth !== null && $clientWidth !== '' && is_numeric($clientWidth)) {
+                  $newWidth = (int) $clientWidth;
+               }
+               if ($clientHeight !== null && $clientHeight !== '' && is_numeric($clientHeight)) {
+                  $newHeight = (int) $clientHeight;
+               }
+            }
+         }
+
+         $this->db->execute(
+            "UPDATE media_gallery
+             SET title = :title,
+                 description = :description,
+                 category = :category,
+                 type = :type,
+                 original_filename = :original_filename,
+                 original_path = :original_path,
+                 original_size = :original_size,
+                 mime_type = :mime_type,
+                 thumb_sm_path = :thumb_sm_path,
+                 thumb_md_path = :thumb_md_path,
+                 poster_path = :poster_path,
+                 duration_seconds = :duration_seconds,
+                 width = :width,
+                 height = :height,
+                 is_active = :is_active,
+                 sort_order = :sort_order,
+                 updated_at = NOW(),
+                 update_by = :update_by
+             WHERE id = :id",
+            [
+               'title' => $title,
+               'description' => $description === '' ? null : $description,
+               'category' => $category,
+               'type' => $type,
+               'original_filename' => $newOriginalFilename,
+               'original_path' => $newOriginalPath,
+               'original_size' => $newOriginalSize,
+               'mime_type' => $newMimeType,
+               'thumb_sm_path' => $newThumbSmPath,
+               'thumb_md_path' => $newThumbMdPath,
+               'poster_path' => $newPosterPath,
+               'duration_seconds' => $newDurationSeconds,
+               'width' => $newWidth,
+               'height' => $newHeight,
+               'is_active' => $isActive ? 'true' : 'false',
+               'sort_order' => $sortOrder,
+               'update_by' => (string) $this->session->get('id'),
+               'id' => $id,
+            ]
          );
-         $oldResourceUrl = $currentGallery['resource_url'] ?? '';
 
-         $newResourceUrl = trim((string) $this->request->getPost('resource_url', 'string'));
+         if ($fileChanged) {
+            $oldOriginalPath = BASE_PATH . '/public/' . (string) ($currentGallery['original_path'] ?? '');
+            $oldThumbSmPath = ! empty($currentGallery['thumb_sm_path']) ? BASE_PATH . '/public/' . (string) $currentGallery['thumb_sm_path'] : '';
+            $oldThumbMdPath = ! empty($currentGallery['thumb_md_path']) ? BASE_PATH . '/public/' . (string) $currentGallery['thumb_md_path'] : '';
+            $oldPosterPath = ! empty($currentGallery['poster_path']) ? BASE_PATH . '/public/' . (string) $currentGallery['poster_path'] : '';
 
-         if ($newResourceUrl === '') {
-             $newResourceUrl = $oldResourceUrl;
-         } else {
-             // Validasi path: hanya boleh dari folder gallery kita
-             $allowedPrefixes = ['images/gallery/', 'videos/gallery/'];
-             $valid = false;
-             foreach ($allowedPrefixes as $prefix) {
-                 if (strpos($newResourceUrl, $prefix) === 0) {
-                     $valid = true;
-                     break;
-                 }
-             }
-             if (!$valid || strpos($newResourceUrl, '..') !== false) {
-                 $this->session->set('gallery_update_error', 'Path media tidak valid.');
-                 return $this->response->redirect('settings/galeri');
-             }
-
-             // Pastikan file benar-benar ada di server
-             if (!file_exists(BASE_PATH . '/public/' . $newResourceUrl)) {
-                 $this->session->set('gallery_update_error', 'File media tidak ditemukan di server.');
-                 return $this->response->redirect('settings/galeri');
-             }
+            if ($oldOriginalPath !== '' && is_file($oldOriginalPath)) {
+               @unlink($oldOriginalPath);
+            }
+            if ($oldThumbSmPath !== '' && is_file($oldThumbSmPath)) {
+               @unlink($oldThumbSmPath);
+            }
+            if ($oldThumbMdPath !== '' && $oldThumbMdPath !== $oldPosterPath && is_file($oldThumbMdPath)) {
+               @unlink($oldThumbMdPath);
+            }
+            if ($oldPosterPath !== '' && is_file($oldPosterPath)) {
+               @unlink($oldPosterPath);
+            }
          }
 
-         if ($newResourceUrl === '') {
-            $this->session->set('gallery_update_error', 'Media galeri wajib diupload.');
-            return $this->response->redirect('settings/galeri');
-         }
-
-         $sql = "UPDATE gallery
-               SET title = :title,
-                   description = :description,
-                   category = :category,
-                   type_media = :type_media,
-                   resource_url = :resource_url,
-                   is_active = :is_active,
-                   updated_at = NOW(),
-                   update_by = :update_by
-               WHERE id = :id";
-
-         $this->db->execute($sql, [
-            'title' => $title,
-            'description' => $description === '' ? null : $description,
-            'category' => $category,
-            'type_media' => $typeMedia,
-            'resource_url' => $newResourceUrl,
-            'is_active' => $isActive ? 'true' : 'false',
-            'update_by' => (string) $this->session->get('id'),
-            'id' => $id,
-         ]);
-
-         $this->session->set('gallery_update_success', "Data galeri {$title} berhasil diperbarui.");
+         return $respondSuccess("Data galeri {$title} berhasil diperbarui.", 'settings/galeri');
       } catch (\Throwable $e) {
-         $this->session->set('gallery_update_error', 'Gagal memperbarui data galeri: ' . $e->getMessage());
-      }
+         if ($fileChanged && is_string($absoluteOriginalPath) && $absoluteOriginalPath !== '' && is_file($absoluteOriginalPath)) {
+            @unlink($absoluteOriginalPath);
+         }
+         if ($fileChanged && is_string($absoluteThumbSm) && $absoluteThumbSm !== '' && is_file($absoluteThumbSm)) {
+            @unlink($absoluteThumbSm);
+         }
+         if ($fileChanged && is_string($absoluteThumbMd) && $absoluteThumbMd !== '' && is_file($absoluteThumbMd)) {
+            @unlink($absoluteThumbMd);
+         }
+         if ($fileChanged && is_string($absolutePoster) && $absolutePoster !== '' && is_file($absolutePoster)) {
+            @unlink($absolutePoster);
+         }
 
-      return $this->response->redirect('settings/galeri');
+         return $respondError('Gagal memperbarui data galeri: ' . $e->getMessage(), 'settings/edit_galeri/' . $id, 500);
+      }
    }
    public function create_galeriAction() {
       $this->view->disable();

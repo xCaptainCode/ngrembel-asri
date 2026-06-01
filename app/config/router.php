@@ -65,6 +65,16 @@ $router->addPost('/galeri/upload', [
     'controller' => 'Gallery',
     'action'     => 'uploadProcess',
 ]);
+$router->addGet('/settings/edit_galeri/([a-zA-Z0-9\-]+)', [
+    'controller' => 'Settings',
+    'action'     => 'edit_galeri',
+    'id'         => 1,
+]);
+$router->addPost('/settings/update_galeri/([a-zA-Z0-9\-]+)', [
+    'controller' => 'Settings',
+    'action'     => 'update_galeri',
+    'params'     => 1,
+]);
 
 $router->add("/mini-zoo", [
     "controller" => "minizoo", 

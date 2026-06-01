@@ -109,6 +109,32 @@
         box-shadow: none !important;
     }
 
+    .btn-back {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 30px;
+        background: linear-gradient(135deg, var(--forest, #0d2416), var(--forest-dark, #07180e));
+        color: var(--gold2, #e8cc7a);
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(13, 36, 22, 0.3);
+        margin-top: 1rem;
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(13, 36, 22, 0.5);
+    }
+
     .progress-bar-container {
         display: none;
         margin-top: 1.5rem;
@@ -193,6 +219,7 @@
             </div>
 
             <button type="submit" id="btnSubmit" class="btn-submit">Mulai Upload</button>
+            <a href="{{ url('settings/galeri') }}" id="btnBack" class="btn-back">Kembali</a>
             
             <div id="progressContainer" class="progress-bar-container">
                 <div id="progressBar" class="progress-bar-fill"></div>
