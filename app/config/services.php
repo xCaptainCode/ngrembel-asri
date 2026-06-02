@@ -105,34 +105,14 @@ $di->setShared('db', function () {
 
 
 //This service returns another PostgreSQL database
-$di->set('dbNa', function() {
+$di->set('dbNgrembelAsri', function() {
     return new \Phalcon\Db\Adapter\Pdo\PostgreSQL(array(
-       'host' => '192.168.1.2',
-       'port' => '5432',
-       'username' => 'appusers',
-       'password' => 'ngrembelokyes',
-       'dbname' => 'ngrembelasri'
+       'host'    => $_ENV['DB_HOST_NA'],
+       'port'    => $_ENV['DB_PORT_NA'],
+       'username' => $_ENV['DB_USER_NA'],
+       'password' => $_ENV['DB_PASS_NA'],
+       'dbname' => $_ENV['DB_NAME_NA']
    ));
-});
-
-//This service returns another PostgreSQL database
-$di->set('dbToko', function() {
-    return new \Phalcon\Db\Adapter\Pdo\PostgreSQL(array(
-       'host' => 'localhost',
-       'port' => '5432',
-       'username' => 'appusers',
-       'password' => 'ngrembelokyes',
-       'dbname' => 'tokosouvenir'
-   ));
-});
-$di->set('dbTrx', function () {
-    return new \Phalcon\Db\Adapter\Pdo\PostgreSQL(array(
-        'host' => 'localhost',
-        'port' => '5432',
-        'username' => 'appusers',
-        'password' => 'ngrembelokyes',
-        'dbname' => 'ngrembelasri'
-    ));
 });
 
 //Set Models Manager
