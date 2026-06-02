@@ -133,11 +133,11 @@
          <p style="margin: 0;">Klik pada baris tabel untuk meng-edit data wahana Paintball.</p>
          <form id="searchForm" method="GET"
             style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;">
-            <input type="text" name="search" placeholder="Cari permainan..." value="{{ search }}"
+            <input type="text" name="search" placeholder="Cari data..." value="{{ search }}"
                style="padding:8px 100px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff; font-family: 'Jost', sans-serif;" />
             <button type="submit" class="btn-cari">Cari</button>
             {% if search is not empty %}
-            <a href="{{ url('settings/permainan') }}" class="btn-reset">Reset</a>
+            <a href="{{ url('settings/paintball') }}" class="btn-reset">Reset</a>
             {% endif %}
          </form>
       </div>

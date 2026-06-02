@@ -26,7 +26,7 @@ class GalleryController extends Controller {
         $params = ['limit' => $this->perPage];
 
         if ($search !== '') {
-            $whereClause .= " AND (title LIKE :search OR description LIKE :search)";
+            $whereClause .= " AND (title ILIKE :search OR description ILIKE :search)";
             $params['search'] = '%' . $search . '%';
         }
 
@@ -79,7 +79,7 @@ class GalleryController extends Controller {
         }
 
         if ($search !== '') {
-            $whereClause .= " AND (title LIKE :search OR description LIKE :search)";
+            $whereClause .= " AND (title ILIKE :search OR description ILIKE :search)";
             $params['search'] = '%' . $search . '%';
         }
 
@@ -202,12 +202,17 @@ class GalleryController extends Controller {
             ['id' => $id]
         );
 
-        $this->response->setContentType($item['mime_type']);
-        $this->response->setHeader('Content-Disposition', 'attachment; filename="' . basename($item['original_filename']) . '"');
-        $this->response->setHeader('Content-Length', filesize($fullPath));
-        $this->response->sendHeaders();
-        readfile($fullPath);
-        exit;
+        // Safe fallback MIME type if none is stored
+        $mimeType = $item['mime_type'] ?: 'application/octet-stream';
+
+        // Delegate file streaming to Phalcon to avoid invalid/partial HTTP responses
+        $this->response->setContentType($mimeType);
+        $this->response->setHeader(
+            'Content-Disposition',
+            'attachment; filename="' . basename($item['original_filename']) . '"'
+        );
+        $this->response->setFileToSend($fullPath);
+        return $this->response;
     }
 
     public function uploadFormAction() {
