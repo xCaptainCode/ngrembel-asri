@@ -165,7 +165,7 @@
    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
       <div>
          <h1 class="gallery-title">Settings - Galeri</h1>
-         <p class="gallery-subtitle">Kelola data media galeri dari tabel <code>media_gallery</code>.</p>
+         <p class="gallery-subtitle">Kelola data media galeri.</p>
       </div>
       <div>
          <a href="{{ url('galeri/upload') }}" class="btn-gold">Tambah Media</a>

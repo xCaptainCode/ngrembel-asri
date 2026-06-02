@@ -55,6 +55,10 @@ $router->addGet('/galeri/download/([a-zA-Z0-9\-]+)', [
     'action'     => 'download',
     'id'         => 1,
 ]);
+$router->addGet('/galeri/load-more', [
+    'controller' => 'Gallery',
+    'action'     => 'loadMore',
+]);
 
 // Gallery - Upload (hanya admin, lindungi dengan middleware/auth check di controller)
 $router->addGet('/galeri/upload', [

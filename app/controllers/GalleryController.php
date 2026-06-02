@@ -17,17 +17,111 @@ class GalleryController extends Controller {
         $this->posterDir   = BASE_PATH . '/public/storage/thumbnails/posters/';
     }
 
+    private $perPage = 6;
+
     public function indexAction() {
+        $search = trim((string)$this->request->getQuery('q', 'string', ''));
+
+        $whereClause = "is_active = true";
+        $params = ['limit' => $this->perPage];
+
+        if ($search !== '') {
+            $whereClause .= " AND (title LIKE :search OR description LIKE :search)";
+            $params['search'] = '%' . $search . '%';
+        }
+
         $galleryList = $this->db->fetchAll(
             "SELECT id, title, description, type, thumb_sm_path, poster_path, duration_seconds 
              FROM media_gallery 
-             WHERE is_active = true 
-             ORDER BY sort_order ASC, created_at DESC",
-            \Phalcon\Db::FETCH_ASSOC
+             WHERE {$whereClause}
+             ORDER BY sort_order ASC, created_at DESC
+             LIMIT :limit",
+            \Phalcon\Db::FETCH_ASSOC,
+            $params
+        );
+
+        $countParams = [];
+        if ($search !== '') {
+            $countParams['search'] = '%' . $search . '%';
+        }
+
+        $totalCount = $this->db->fetchOne(
+            "SELECT COUNT(*) as total FROM media_gallery WHERE {$whereClause}",
+            \Phalcon\Db::FETCH_ASSOC,
+            $countParams
         );
 
         $this->view->setVar('galleryList', $galleryList ?: []);
+        $this->view->setVar('totalCount', (int)($totalCount['total'] ?? 0));
+        $this->view->setVar('perPage', $this->perPage);
+        $this->view->setVar('searchQuery', $search);
         $this->view->pick('galeri/index');
+    }
+
+    public function loadMoreAction() {
+        $this->view->disable();
+
+        $offset = (int)$this->request->getQuery('offset', 'int', 0);
+        $limit  = (int)$this->request->getQuery('limit', 'int', $this->perPage);
+        $filter = $this->request->getQuery('filter', 'string', 'all');
+        $search = trim((string)$this->request->getQuery('q', 'string', ''));
+
+        // Cap limit to prevent abuse
+        if ($limit > 48) $limit = 48;
+        if ($limit < 1) $limit = $this->perPage;
+
+        $whereClause = "is_active = true";
+        $params = ['limit' => $limit, 'offset' => $offset];
+
+        if ($filter === 'photo' || $filter === 'video') {
+            $whereClause .= " AND type = :type";
+            $params['type'] = $filter;
+        }
+
+        if ($search !== '') {
+            $whereClause .= " AND (title LIKE :search OR description LIKE :search)";
+            $params['search'] = '%' . $search . '%';
+        }
+
+        $items = $this->db->fetchAll(
+            "SELECT id, title, description, type, thumb_sm_path, poster_path, duration_seconds 
+             FROM media_gallery 
+             WHERE {$whereClause}
+             ORDER BY sort_order ASC, created_at DESC
+             LIMIT :limit OFFSET :offset",
+            \Phalcon\Db::FETCH_ASSOC,
+            $params
+        );
+
+        $countParams = [];
+        if ($filter === 'photo' || $filter === 'video') {
+            $countParams['type'] = $filter;
+        }
+        if ($search !== '') {
+            $countParams['search'] = '%' . $search . '%';
+        }
+
+        $totalCount = $this->db->fetchOne(
+            "SELECT COUNT(*) as total FROM media_gallery WHERE {$whereClause}",
+            \Phalcon\Db::FETCH_ASSOC,
+            $countParams
+        );
+
+        // Resolve URLs for thumbnails/posters
+        $resolved = [];
+        foreach ($items as $item) {
+            $item['thumb_sm_url'] = $item['thumb_sm_path'] ? $this->url->get($item['thumb_sm_path']) : '';
+            $item['poster_url'] = $item['poster_path'] ? $this->url->get($item['poster_path']) : '';
+            $resolved[] = $item;
+        }
+
+        return $this->jsonResponse([
+            'status' => 'ok',
+            'data'   => $resolved,
+            'total'  => (int)($totalCount['total'] ?? 0),
+            'offset' => $offset,
+            'limit'  => $limit,
+        ]);
     }
 
     public function detailAction() {

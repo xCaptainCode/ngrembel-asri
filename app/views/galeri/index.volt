@@ -193,13 +193,97 @@
         line-height: 1.5;
     }
 
+    /* Search & Controls Layout */
+    .gallery-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 3.5rem;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0 1rem;
+    }
+
+    .search-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 20px 14px 50px;
+        border-radius: 30px;
+        background: rgba(16, 36, 23, 0.65);
+        border: 1.5px solid rgba(212, 177, 90, 0.2);
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .search-input:focus {
+        border-color: rgba(212, 177, 90, 0.75);
+        box-shadow: 0 0 25px rgba(212, 177, 90, 0.2);
+        background: rgba(16, 36, 23, 0.85);
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.45);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(212, 177, 90, 0.6);
+        transition: color 0.3s ease;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .search-input:focus ~ .search-icon {
+        color: rgba(212, 177, 90, 1);
+    }
+
+    .clear-search-btn {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.4);
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .clear-search-btn:hover {
+        color: #fff;
+    }
+
+    .clear-search-btn.show {
+        display: flex;
+    }
+
     /* Dynamic Filter Tabs */
     .filter-tabs-container {
         display: flex;
         justify-content: center;
         gap: 12px;
         flex-wrap: wrap;
-        margin-bottom: 3rem;
     }
 
     .filter-tab {
@@ -453,6 +537,118 @@
     .masonry-card:hover .video-play-indicator {
         opacity: 0;
     }
+
+    /* ═══════════════════════════════════════════
+       LOAD MORE BUTTON
+       ═══════════════════════════════════════════ */
+    .load-more-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 3rem;
+        padding-bottom: 2rem;
+    }
+
+    .load-more-counter {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 1px;
+        font-weight: 500;
+    }
+
+    .load-more-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 42px;
+        border-radius: 50px;
+        background: rgba(212, 177, 90, 0.1);
+        border: 1.5px solid rgba(212, 177, 90, 0.4);
+        color: #d4b15a;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .load-more-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(212, 177, 90, 0.15), rgba(212, 177, 90, 0));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .load-more-btn:hover {
+        background: rgba(212, 177, 90, 0.2);
+        border-color: #d4b15a;
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(212, 177, 90, 0.25), 0 0 0 1px rgba(212, 177, 90, 0.1);
+    }
+
+    .load-more-btn:hover::before {
+        opacity: 1;
+    }
+
+    .load-more-btn:active {
+        transform: translateY(-1px);
+    }
+
+    .load-more-btn.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .load-more-btn .spinner {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 2.5px solid rgba(212, 177, 90, 0.3);
+        border-top-color: #d4b15a;
+        border-radius: 50%;
+        animation: loadSpin 0.7s linear infinite;
+    }
+
+    .load-more-btn.loading .spinner {
+        display: block;
+    }
+
+    .load-more-btn.loading .btn-label {
+        display: none;
+    }
+
+    .load-more-progress {
+        width: 200px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .load-more-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #d4b15a, #e8cc73);
+        border-radius: 3px;
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 0%;
+    }
+
+    @keyframes loadSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    .load-more-hidden {
+        display: none !important;
+    }
 </style>
 
 <!-- HEADER SECTION -->
@@ -467,11 +663,30 @@
 
 <!-- MAIN GALLERY SECTION -->
 <section id="gallery-section">
-    <!-- DYNAMIC FILTER TABS -->
-    <div class="filter-tabs-container r" id="filterTabs">
-        <button class="filter-tab active" data-filter="all">Semua</button>
-        <button class="filter-tab" data-filter="photo">Foto</button>
-        <button class="filter-tab" data-filter="video">Video</button>
+    <div class="gallery-controls r">
+        <!-- SEARCH BAR -->
+        <div class="search-wrapper">
+            <input type="text" id="gallerySearch" class="search-input" placeholder="Cari foto atau video kenangan..." value="{{ searchQuery|default('') }}">
+            <span class="search-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </span>
+            <button id="clearSearchBtn" class="clear-search-btn" title="Hapus pencarian">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- DYNAMIC FILTER TABS -->
+        <div class="filter-tabs-container" id="filterTabs">
+            <button class="filter-tab active" data-filter="all">Semua</button>
+            <button class="filter-tab" data-filter="photo">Foto</button>
+            <button class="filter-tab" data-filter="video">Video</button>
+        </div>
     </div>
 
     <!-- GALLERY GRID -->
@@ -565,6 +780,26 @@
                 </div>
             {% endfor %}
         </div>
+
+        <!-- LOAD MORE BUTTON -->
+        {% if totalCount > perPage %}
+        <div class="load-more-container" id="loadMoreContainer">
+            <span class="load-more-counter" id="loadMoreCounter">
+                Menampilkan <span id="shownCount">{{ galleryList|length }}</span> dari <span id="totalCountDisplay">{{ totalCount }}</span> item
+            </span>
+            <button class="load-more-btn" id="loadMoreBtn">
+                <span class="btn-label">Muat Lebih Banyak</span>
+                <span class="spinner"></span>
+                <svg class="btn-label" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="7 13 12 18 17 13"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="6"></line>
+                </svg>
+            </button>
+            <div class="load-more-progress">
+                <div class="load-more-progress-bar" id="loadMoreProgress"></div>
+            </div>
+        </div>
+        {% endif %}
     {% endif %}
 </section>
 
@@ -610,10 +845,20 @@
     </div>
 </div>
 
+<script id="galleryConfig" type="application/json">
+    {
+        "perPage": {{ perPage }},
+        "initialCount": {{ galleryList|length }},
+        "totalCount": {{ totalCount }},
+        "loadMoreUrl": "{{ url('galeri/load-more') }}",
+        "detailUrl": "{{ url('galeri/detail/') }}",
+        "searchQuery": "{{ searchQuery|default('') }}"
+    }
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const grid = document.getElementById('galleryGrid');
-        const cards = document.querySelectorAll('.masonry-card');
         const tabs = document.querySelectorAll('.filter-tab');
         
         // Lightbox elements
@@ -626,16 +871,54 @@
         const lbTitle = document.getElementById('lightboxTitle');
         const lbDesc = document.getElementById('lightboxDesc');
         const lbDownloadBtn = document.getElementById('lightboxDownloadBtn');
-        
+
+        // Load More elements
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const shownCountEl = document.getElementById('shownCount');
+        const totalCountEl = document.getElementById('totalCountDisplay');
+        const progressBar = document.getElementById('loadMoreProgress');
+
+        // State (from server-side config)
+        const cfgEl = document.getElementById('galleryConfig');
+        const cfg = cfgEl ? JSON.parse(cfgEl.textContent) : {};
+        const PER_PAGE = cfg.perPage || 12;
+        let currentOffset = cfg.initialCount || 0;
+        let currentFilter = 'all';
+        let currentSearch = cfg.searchQuery || '';
+        let totalItems = cfg.totalCount || 0;
+        let isLoading = false;
+
+        // Search DOM elements
+        const searchInput = document.getElementById('gallerySearch');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+        // Helper: get all cards currently in the grid
+        const getAllCards = () => grid ? [...grid.querySelectorAll('.masonry-card')] : [];
+
         // Apply staggered animation delay to card elements on page load
-        cards.forEach((card, idx) => {
-            // card.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        getAllCards().forEach((card, idx) => {
             card.style.transitionDelay = `${(idx % 12) * 0.04}s`;
         });
         
-        if (!grid || cards.length === 0) {
+        if (!grid) {
             return;
         }
+
+        // Toggle clear button on load
+        if (searchInput && searchInput.value) {
+            if (clearSearchBtn) clearSearchBtn.classList.add('show');
+        }
+
+        const updateClearButton = () => {
+            if (clearSearchBtn) {
+                if (searchInput && searchInput.value) {
+                    clearSearchBtn.classList.add('show');
+                } else {
+                    clearSearchBtn.classList.remove('show');
+                }
+            }
+        };
 
         // ═══════════════════════════════════════════
         // MASONRY LAYOUT ENGINE
@@ -650,9 +933,17 @@
 
         const layoutMasonry = () => {
             if (!grid) return;
+            const allCards = getAllCards();
+            const visibleCards = allCards.filter(c => !c.classList.contains('hidden'));
+            
+            if (visibleCards.length === 0) {
+                grid.classList.remove('js-masonry-enabled');
+                grid.style.height = 'auto';
+                return;
+            }
+
             grid.classList.add('js-masonry-enabled');
 
-            const visibleCards = [...cards].filter(c => !c.classList.contains('hidden'));
             const columnCount = getColumnCount();
             const gap = getGap();
             const gridWidth = grid.clientWidth;
@@ -688,63 +979,237 @@
         window.addEventListener('resize', relayout);
 
         // Wait for all images to load before initial masonry layout
-        if (grid) {
-            const images = grid.querySelectorAll('img');
-            let pendingImages = images.length;
-            if (pendingImages === 0) {
-                layoutMasonry();
-            } else {
-                const onImageDone = () => {
-                    pendingImages -= 1;
-                    if (pendingImages <= 0) {
-                        layoutMasonry();
-                    }
-                };
-
-                images.forEach((img) => {
-                    if (img.complete) {
-                        onImageDone();
-                    } else {
-                        img.addEventListener('load', onImageDone, { once: true });
-                        img.addEventListener('error', onImageDone, { once: true });
-                    }
-                });
+        const waitForImages = (container, callback) => {
+            const images = container.querySelectorAll('img');
+            let pending = images.length;
+            if (pending === 0) {
+                callback();
+                return;
             }
+            const onDone = () => {
+                pending--;
+                if (pending <= 0) callback();
+            };
+            images.forEach(img => {
+                if (img.complete) {
+                    onDone();
+                } else {
+                    img.addEventListener('load', onDone, { once: true });
+                    img.addEventListener('error', onDone, { once: true });
+                }
+            });
+        };
+
+        waitForImages(grid, layoutMasonry);
+
+        // ═══════════════════════════════════════════
+        // PROGRESS BAR & COUNTER UPDATE
+        // ═══════════════════════════════════════════
+        const updateProgress = () => {
+            if (!loadMoreContainer) return;
+            const visibleCount = getAllCards().filter(c => !c.classList.contains('hidden')).length;
+            if (shownCountEl) shownCountEl.textContent = visibleCount;
+            if (totalCountEl) totalCountEl.textContent = totalItems;
+            if (progressBar) {
+                const pct = totalItems > 0 ? Math.min((visibleCount / totalItems) * 100, 100) : 100;
+                progressBar.style.width = `${pct}%`;
+            }
+            // Hide the button when all items are loaded
+            if (currentOffset >= totalItems) {
+                if (loadMoreBtn) loadMoreBtn.classList.add('load-more-hidden');
+            } else {
+                if (loadMoreBtn) loadMoreBtn.classList.remove('load-more-hidden');
+            }
+        };
+
+        updateProgress();
+
+        // ═══════════════════════════════════════════
+        // CREATE CARD HTML FROM DATA
+        // ═══════════════════════════════════════════
+        const createCardElement = (item) => {
+            const card = document.createElement('div');
+            card.className = 'masonry-card r';
+            card.setAttribute('data-media-type', item.type);
+            card.setAttribute('data-id', item.id);
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+
+            const isVideo = item.type === 'video';
+            const imgSrc = isVideo
+                ? (item.poster_url || '')
+                : (item.thumb_sm_url || '');
+
+            const durationText = item.duration_seconds > 0
+                ? `${String(Math.floor(item.duration_seconds / 60)).padStart(2, '0')}:${String(item.duration_seconds % 60).padStart(2, '0')}`
+                : 'Video';
+
+            let mediaHTML = '';
+            if (isVideo) {
+                if (imgSrc) {
+                    mediaHTML = `<img class="masonry-img" src="${imgSrc}" alt="${item.title}" style="background:#07190e;" />`;
+                } else {
+                    mediaHTML = `<div class="masonry-img" style="aspect-ratio: 16/9; background:#07190e; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3);"><i class="fas fa-video fa-2x"></i></div>`;
+                }
+                mediaHTML += `<div class="video-play-indicator"><svg viewBox="0 0 24 24" width="18" height="18" fill="#d4b15a"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg></div>`;
+            } else {
+                mediaHTML = `<img class="masonry-img" src="${imgSrc}" alt="${item.title}" />`;
+            }
+
+            const badgeHTML = isVideo
+                ? `<span class="badge-icon video"><i class="fas fa-video"></i> ${durationText}</span>`
+                : `<span class="badge-icon foto"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Foto</span>`;
+
+            const overlayBtnHTML = isVideo
+                ? `<div class="play-btn-circle"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"></polygon></svg></div>`
+                : `<div class="zoom-btn-circle"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></div>`;
+
+            const descHTML = item.description ? `<p class="masonry-desc">${item.description}</p>` : '';
+
+            card.innerHTML = `
+                <div class="card-media-wrapper">
+                    ${mediaHTML}
+                    <div class="media-badge">${badgeHTML}</div>
+                    <div class="media-overlay"><div class="action-btn">${overlayBtnHTML}</div></div>
+                </div>
+                <div class="masonry-body">
+                    <h3 class="masonry-title">${item.title}</h3>
+                    ${descHTML}
+                </div>
+            `;
+
+            return card;
+        };
+
+        // ═══════════════════════════════════════════
+        // UNIFIED SEARCH AND FILTER LOGIC (Server-Side)
+        // ═══════════════════════════════════════════
+        const performSearchAndFilter = (resetOffset = true) => {
+            if (isLoading) return;
+            isLoading = true;
+            
+            if (resetOffset) {
+                currentOffset = 0;
+            }
+
+            if (loadMoreBtn) loadMoreBtn.classList.add('loading');
+
+            const params = new URLSearchParams({
+                offset: currentOffset,
+                limit: PER_PAGE,
+                filter: currentFilter,
+                q: currentSearch,
+            });
+
+            fetch(`${cfg.loadMoreUrl}?${params.toString()}`)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'ok') {
+                        totalItems = res.total;
+                        
+                        if (resetOffset) {
+                            grid.innerHTML = '';
+                        }
+
+                        if (res.data.length > 0) {
+                            const fragment = document.createDocumentFragment();
+                            const newCards = [];
+
+                            res.data.forEach((item, idx) => {
+                                const card = createCardElement(item);
+                                card.style.transitionDelay = `${(idx % 12) * 0.04}s`;
+                                fragment.appendChild(card);
+                                newCards.push(card);
+                            });
+
+                            grid.appendChild(fragment);
+                            currentOffset = resetOffset ? res.data.length : currentOffset + res.data.length;
+
+                            waitForImages(grid, () => {
+                                layoutMasonry();
+                                requestAnimationFrame(() => {
+                                    newCards.forEach(card => {
+                                        card.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                                        card.style.opacity = '1';
+                                        card.style.transform = 'translateY(0)';
+                                    });
+                                });
+                            });
+                        } else {
+                            if (resetOffset) {
+                                grid.style.height = 'auto';
+                                grid.classList.remove('js-masonry-enabled');
+                                grid.innerHTML = `
+                                    <div class="no-results r" style="text-align: center; padding: 5rem 1rem; color: rgba(255, 255, 255, 0.5); width: 100%; grid-column: 1 / -1;">
+                                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.6; color: #d4b15a;">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                                        </svg>
+                                        <p style="font-size: 1.15rem; margin-bottom: 0.5rem; font-weight: 600; color: #d4b15a;">Tidak ada hasil ditemukan</p>
+                                        <p style="font-size: 0.95rem; margin: 0; max-width: 400px; margin: 0 auto;">Kami tidak dapat menemukan foto atau video dengan kata kunci "${currentSearch}". Coba kata kunci lain.</p>
+                                    </div>
+                                `;
+                            }
+                        }
+
+                        updateProgress();
+                    } else {
+                        if (loadMoreBtn) loadMoreBtn.classList.add('load-more-hidden');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading items:', err);
+                })
+                .finally(() => {
+                    isLoading = false;
+                    if (loadMoreBtn) loadMoreBtn.classList.remove('loading');
+                });
+        };
+
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => performSearchAndFilter(false));
         }
 
-        // 1. FILTERING LOGIC
+        // Debounced Live Search
+        let debounceTimer = null;
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                updateClearButton();
+                currentSearch = searchInput.value.trim();
+                
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    performSearchAndFilter(true);
+                }, 400);
+            });
+        }
+
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = '';
+                    updateClearButton();
+                    currentSearch = '';
+                    performSearchAndFilter(true);
+                }
+            });
+        }
+
+        // Filter tabs trigger search reload
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                // Toggle active filter button states
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
 
-                const filterValue = tab.getAttribute('data-filter');
-
-                cards.forEach(card => {
-                    const cardType = card.getAttribute('data-media-type');
-
-                    if (filterValue === 'all' || cardType === filterValue) {
-                        card.classList.remove('hidden');
-                        setTimeout(() => {
-                            card.style.opacity = '1';
-                            card.style.transform = 'scale(1) translateY(0)';
-                        }, 50);
-                    } else {
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.85) translateY(15px)';
-                        setTimeout(() => {
-                            card.classList.add('hidden');
-                        }, 350);
-                    }
-                });
-
-                // Re-layout masonry after filter animations complete
-                setTimeout(layoutMasonry, 400);
+                currentFilter = tab.getAttribute('data-filter');
+                performSearchAndFilter(true);
             });
         });
 
-        // 2. LIGHTBOX SHOW LOGIC
+        // ═══════════════════════════════════════════
+        // LIGHTBOX SHOW LOGIC
+        // ═══════════════════════════════════════════
         if (grid) {
             grid.addEventListener('click', (e) => {
                 const card = e.target.closest('.masonry-card');
@@ -769,7 +1234,7 @@
                 document.body.style.overflow = 'hidden';
 
                 // Fetch details via AJAX
-                fetch(`{{ url('galeri/detail/') }}${mediaId}`)
+                fetch(`${cfg.detailUrl}${mediaId}`)
                     .then(response => response.json())
                     .then(res => {
                         if (res.status === 'ok') {
@@ -804,7 +1269,9 @@
             });
         }
 
-        // 3. LIGHTBOX HIDE LOGIC
+        // ═══════════════════════════════════════════
+        // LIGHTBOX HIDE LOGIC
+        // ═══════════════════════════════════════════
         const closeLightbox = () => {
             lightbox.classList.remove('active');
             document.body.style.overflow = '';
