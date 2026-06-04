@@ -99,11 +99,21 @@ class SettingsController extends Controller {
       $nama = trim((string) $this->request->getPost('nama', 'string'));
       $email = trim((string) $this->request->getPost('email', 'email'));
       $noHp = trim((string) $this->request->getPost('no_hp', 'string'));
+      $tglLahir = trim((string) $this->request->getPost('tgl_lahir', 'string'));
+      $gender = trim((string) $this->request->getPost('gender', 'string'));
+      $kota = trim((string) $this->request->getPost('kota', 'string'));
+      $alamat = trim((string) $this->request->getPost('alamat', 'string'));
       $role = trim((string) $this->request->getPost('role', 'string'));
       $isActiveVal = trim((string) $this->request->getPost('is_active', 'string'));
 
-      if ($id === '' || $nama === '' || $email === '' || $noHp === '' || !in_array($role, ['admin', 'member'], true)) {
+      if ($id === '' || $nama === '' || $email === '' || $noHp === '' || $tglLahir === '' || $gender === '' || $kota === '' || $alamat === ''
+         || !in_array($role, ['admin', 'member'], true)) {
          $this->session->set('member_update_error', 'Data input member tidak valid.');
+         return $this->response->redirect('settings/member');
+      }
+
+      if (!in_array($gender, ['L', 'P'], true)) {
+         $this->session->set('member_update_error', 'Jenis kelamin tidak valid.');
          return $this->response->redirect('settings/member');
       }
 
@@ -128,6 +138,10 @@ class SettingsController extends Controller {
              SET nama = :nama,
                  email = :email,
                  no_hp = :no_hp,
+                 tgl_lahir = :tgl_lahir,
+                 gender = :gender,
+                 kota = :kota,
+                 alamat = :alamat,
                  role = :role,
                  is_active = :is_active
              WHERE id = :id",
@@ -135,6 +149,10 @@ class SettingsController extends Controller {
                'nama' => $nama,
                'email' => $email,
                'no_hp' => $noHp,
+               'tgl_lahir' => $tglLahir,
+               'gender' => $gender,
+               'kota' => $kota,
+               'alamat' => $alamat,
                'role' => $role,
                'is_active' => $isActive ? 'TRUE' : 'FALSE',
                'id' => $id
