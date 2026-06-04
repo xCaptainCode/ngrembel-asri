@@ -88,6 +88,85 @@ class SettingsController extends Controller {
       $this->session->remove('member_update_error');
    }
 
+   public function download_member_csvAction() {
+      $this->view->disable();
+
+      $search = trim((string) $this->request->getQuery('search', 'string', ''));
+      $whereClause = '';
+      $params = [];
+
+      if ($search !== '') {
+         $whereClause = "WHERE (nama ILIKE :search
+                         OR email ILIKE :search
+                         OR no_hp ILIKE :search
+                         OR no_member ILIKE :search)";
+         $params['search'] = '%' . $search . '%';
+      }
+
+      $members = $this->db->fetchAll(
+         "SELECT nama, email, no_hp, tgl_lahir, gender, alamat, tgl_daftar
+          FROM members {$whereClause}
+          ORDER BY nama ASC",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+
+      $handle = fopen('php://temp', 'r+');
+      if ($handle === false) {
+         $this->response->setStatusCode(500);
+         return $this->response->setContent('Gagal membuat file CSV.');
+      }
+
+      fwrite($handle, "\xEF\xBB\xBF");
+      fputcsv($handle, ['nama', 'email', 'no_telp', 'tgl_lahir', 'gender', 'alamat', 'tgl_daftar']);
+
+      foreach ($members ?: [] as $member) {
+         $gender = (string) ($member['gender'] ?? '');
+         if ($gender === 'L') {
+            $gender = 'Laki-laki';
+         } elseif ($gender === 'P') {
+            $gender = 'Perempuan';
+         }
+
+         fputcsv($handle, [
+            (string) ($member['nama'] ?? ''),
+            (string) ($member['email'] ?? ''),
+            (string) ($member['no_hp'] ?? ''),
+            $this->formatCsvDate($member['tgl_lahir'] ?? ''),
+            $gender,
+            (string) ($member['alamat'] ?? ''),
+            $this->formatCsvDate($member['tgl_daftar'] ?? ''),
+         ]);
+      }
+
+      rewind($handle);
+      $csv = stream_get_contents($handle);
+      fclose($handle);
+
+      $filename = 'data_member_' . date('Y-m-d_His') . '.csv';
+
+      $this->response->setHeader('Content-Type', 'text/csv; charset=UTF-8');
+      $this->response->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
+      $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      $this->response->setContent($csv !== false ? $csv : '');
+
+      return $this->response;
+   }
+
+   private function formatCsvDate($value) {
+      if ($value === null || $value === '') {
+         return '';
+      }
+
+      $str = trim((string) $value);
+      if (preg_match('/^\d{4}-\d{2}-\d{2}/', $str)) {
+         return substr($str, 0, 10);
+      }
+
+      $timestamp = strtotime($str);
+      return $timestamp ? date('Y-m-d', $timestamp) : $str;
+   }
+
    public function update_memberAction() {
       $this->view->disable();
 

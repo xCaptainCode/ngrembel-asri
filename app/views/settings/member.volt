@@ -159,6 +159,29 @@
       color: #fff;
    }
 
+   .btn-download {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(200, 168, 75, 0.45);
+      background: rgba(200, 168, 75, 0.15);
+      color: #e8cc7a;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+   }
+
+   .btn-download:hover {
+      background: rgba(200, 168, 75, 0.28);
+      border-color: rgba(212, 177, 90, 0.6);
+      transform: translateY(-1px);
+      color: #e8cc7a;
+   }
+
    @keyframes pulse {
       0% {
          transform: scale(1);
@@ -191,6 +214,8 @@
             {% if search is not empty %}
             <a href="{{ url('settings/member') }}" class="btn-reset">Reset</a>
             {% endif %}
+            <a href="{{ url('settings/download_member_csv') }}{% if search is not empty %}?{{ http_build_query({'search': search}) }}{% endif %}"
+               class="btn-download">Download CSV</a>
             <select name="per_page"
                style="padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:#203729; color:#fff;" hidden>
                <option value="10" {% if perPage==10 %}selected{% endif %}>10 per page</option>
