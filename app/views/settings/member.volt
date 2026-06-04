@@ -255,9 +255,18 @@
          </thead>
          <tbody id="memberTableBody">
             {% for m in members %}
-            <tr class="settings-row-editable" data-id="{{ m['id'] }}" data-no-member="{{ m['no_member'] }}"
-               data-nama="{{ m['nama'] }}" data-email="{{ m['email'] }}" data-no-hp="{{ m['no_hp'] }}"
-               data-role="{{ m['role'] }}" data-is-active="{{ m['is_active'] ? '1' : '0' }}">
+            <tr class="settings-row-editable" 
+               data-id="{{ m['id'] }}" 
+               data-no-member="{{ m['no_member'] }}"
+               data-nama="{{ m['nama'] }}" 
+               data-email="{{ m['email'] }}" 
+               data-no-hp="{{ m['no_hp'] }}"
+               data-tgl-lahir="{{ m['tgl_lahir'] }}"
+               data-gender="{{ m['gender'] }}"
+               data-kota="{{ m['kota'] }}"
+               data-alamat="{{ m['alamat'] }}"
+               data-role="{{ m['role'] }}" 
+               data-is-active="{{ m['is_active'] ? '1' : '0' }}">
                <td
                   style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08); font-family: monospace; font-size: 0.95rem; color: #e8cc7a; font-weight: 600;">
                   {{ m['no_member'] }}</td>
@@ -314,7 +323,7 @@
 <div id="memberModal"
    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
    <div
-      style="width:min(580px, 92vw); background:#102417; color:#fff; border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      style="width:min(620px, 92vw); max-height:90vh; overflow-y:auto; background:#102417; color:#fff; border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
       <h3
          style="margin:0 0 18px; font-size: 1.5rem; color:#d4b15a; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; font-family: 'Cormorant Garamond', serif;">
          Edit Member</h3>
@@ -349,6 +358,40 @@
                style="display:block; margin-bottom:6px; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px;">NO
                TELEPON</label>
             <input id="formNoHp" name="no_hp" type="tel" required
+               style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; font-family: 'Jost', sans-serif;">
+         </div>
+
+         <div style="margin-bottom:14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+               <label for="formTglLahir"
+                  style="display:block; margin-bottom:6px; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px;">TANGGAL
+                  LAHIR</label>
+               <input id="formTglLahir" name="tgl_lahir" type="date" required
+                  style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; font-family: 'Jost', sans-serif;">
+            </div>
+            <div>
+               <label for="formGender"
+                  style="display:block; margin-bottom:6px; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px;">JENIS
+                  KELAMIN</label>
+               <select id="formGender" name="gender" required
+                  style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; cursor: pointer; font-family: 'Jost', sans-serif;">
+                  <option value="L">Laki-laki</option>
+                  <option value="P">Perempuan</option>
+               </select>
+            </div>
+         </div>
+
+         <div style="margin-bottom:14px;">
+            <label for="formKota"
+               style="display:block; margin-bottom:6px; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px;">KOTA</label>
+            <input id="formKota" name="kota" type="text" required
+               style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; font-family: 'Jost', sans-serif;">
+         </div>
+
+         <div style="margin-bottom:14px;">
+            <label for="formAlamat"
+               style="display:block; margin-bottom:6px; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.5px;">ALAMAT</label>
+            <input id="formAlamat" name="alamat" type="text" required
                style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:#203729; color:#fff; font-family: 'Jost', sans-serif;">
          </div>
 
@@ -395,8 +438,23 @@
       const formNama = document.getElementById('formNama');
       const formEmail = document.getElementById('formEmail');
       const formNoHp = document.getElementById('formNoHp');
+      const formTglLahir = document.getElementById('formTglLahir');
+      const formGender = document.getElementById('formGender');
+      const formKota = document.getElementById('formKota');
+      const formAlamat = document.getElementById('formAlamat');
       const formRole = document.getElementById('formRole');
       const formIsActive = document.getElementById('formIsActive');
+
+      function formatDateForInput(value) {
+         if (!value) return '';
+         const str = String(value).trim();
+         if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+            return str.substring(0, 10);
+         }
+         const parsed = new Date(str);
+         if (Number.isNaN(parsed.getTime())) return '';
+         return parsed.toISOString().substring(0, 10);
+      }
 
       function openModalForEdit(row) {
          formId.value = row.dataset.id || '';
@@ -404,6 +462,10 @@
          formNama.value = row.dataset.nama || '';
          formEmail.value = row.dataset.email || '';
          formNoHp.value = row.dataset.noHp || '';
+         formTglLahir.value = formatDateForInput(row.dataset.tglLahir);
+         formGender.value = row.dataset.gender || 'L';
+         formKota.value = row.dataset.kota || '';
+         formAlamat.value = row.dataset.alamat || '';
          formRole.value = row.dataset.role || 'member';
          formIsActive.value = row.dataset.isActive || '1';
 
