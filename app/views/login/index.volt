@@ -212,7 +212,7 @@
 
       .auth-foot {
          text-align: center;
-         margin-top: 1.25rem;
+         margin-top: 1.5rem;
          color: rgba(255, 255, 255, .7);
          font-size: .87rem;
       }
@@ -226,6 +226,79 @@
       .auth-foot a:hover {
          text-decoration: underline;
          text-underline-offset: 3px;
+      }
+
+      .auth-forgot {
+         text-align: right;
+         margin: .3rem .3rem .3rem 0;
+         font-size: .8rem;
+         font-style: italic;
+      }
+
+      .auth-forgot a {
+         color: var(--gold2);
+         text-decoration: none;
+         font-weight: 600;
+      }
+
+      .auth-forgot a:hover {
+         text-decoration: underline;
+         text-underline-offset: 3px;
+      }
+
+      .error-actions {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 1rem;
+         justify-content: center;
+         margin-bottom: 1.75rem;
+         margin-top: 1.75rem;
+      }
+
+      .error-links {
+         display: flex;
+         flex-wrap: wrap;
+         align-items: center;
+         justify-content: center;
+         gap: .55rem .75rem;
+         font-size: .82rem;
+         letter-spacing: .5px;
+      }
+
+      .error-links a {
+         color: var(--mint);
+         text-decoration: none;
+         transition: color .25s;
+      }
+
+      .error-links a:hover {
+         color: var(--gold2);
+      }
+
+      .error-links span {
+         color: rgba(255, 255, 255, 0.25);
+      }
+
+      .btn-ghost {
+         display: inline-flex;
+         align-items: center;
+         gap: .5rem;
+         border: 1.5px solid rgba(255, 255, 255, .4);
+         color: rgba(255, 255, 255, .85);
+         background-color: rgba(0, 0, 0, 0.85);
+         padding: .9rem 2.4rem;
+         border-radius: 40px;
+         font-size: .85rem;
+         letter-spacing: 1.5px;
+         text-transform: uppercase;
+         text-decoration: none;
+         transition: border-color .25s, color .25s, background .25s;
+      }
+
+      .btn-ghost:hover {
+         border-color: var(--gold);
+         color: var(--gold2);
+         background: rgba(200, 168, 75, .08);
       }
 
       .btn-gold {
@@ -338,8 +411,8 @@
          </div>
          <div class="auth-card">
             <div class="auth-head">
-               <h1 class="auth-title">Selamat <em>Datang</em></h1>
-               <p class="auth-subtitle">Silakan masuk untuk melanjutkan</p>
+               <h1 class="auth-title">Silakan <em>Masuk</em></h1>
+               {# <p class="auth-subtitle">Silakan masuk untuk melanjutkan</p> #}
             </div>
 
             <form action="{{ url('login/proses') }}" method="POST">
@@ -366,15 +439,35 @@
                         </svg>
                      </button>
                   </div>
+                  <div class="auth-forgot">
+                     Lupa <a href="{{ url('lupa-password') }}">password?</a>
+                  </div>
                </div>
 
-               <button type="submit" class="btn-gold auth-submit">Masuk Sekarang</button>
+               <button type="submit" class="btn-gold auth-submit">Masuk</button>
             </form>
 
             <div class="auth-foot">
                Belum punya akun? <a href="{{ url('registrasi') }}">Daftar</a><br><br>
-               Lupa password? <a href="{{ url('lupa-password') }}">Reset</a>
             </div>
+
+            <!-- back to home -->
+            <div class="error-actions">
+               <a href="{{ url('') }}" class="btn-ghost">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Kembali ke Beranda
+               </a>
+               {# <a href="{{ url('galeri') }}" class="btn-ghost">Lihat Galeri</a> #}
+            </div>
+            <nav class="error-links" aria-label="Navigasi cepat">
+               <a href="{{ url('price-list') }}">Price List</a>
+               <span aria-hidden="true">·</span>
+               <a href="{{ url('galeri') }}">Galeri</a>
+               <span aria-hidden="true">·</span>
+               <a href="{{ url('kritik-saran') }}">Kritik &amp; Saran</a>
+            </nav>
          </div>
       </div>
    </section>

@@ -1,13 +1,4 @@
 <style>
-   .settings-row-editable {
-      cursor: pointer;
-      transition: background 0.2s ease-in-out;
-   }
-
-   .settings-row-editable:hover {
-      background: rgba(255, 255, 255, 0.05) !important;
-   }
-
    .table th,
    .table td {
       vertical-align: middle;
@@ -159,6 +150,134 @@
       color: #fff;
    }
 
+   .btn-download {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(200, 168, 75, 0.45);
+      background: rgba(200, 168, 75, 0.15);
+      color: #e8cc7a;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+   }
+
+   .btn-download:hover {
+      background: rgba(200, 168, 75, 0.28);
+      border-color: rgba(212, 177, 90, 0.6);
+      transform: translateY(-1px);
+      color: #e8cc7a;
+   }
+
+   .btn-upload {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(92, 170, 120, 0.45);
+      background: rgba(92, 170, 120, 0.15);
+      color: #9fd4b0;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Jost', sans-serif;
+      transition: all 0.2s ease;
+   }
+
+   .btn-upload:hover {
+      background: rgba(92, 170, 120, 0.28);
+      transform: translateY(-1px);
+   }
+
+   .import-panel {
+      background: rgba(16, 36, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+   }
+
+   .import-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+   }
+
+   .import-status-ready {
+      background: rgba(92, 170, 120, 0.15);
+      color: #5caa78;
+      border: 1px solid rgba(92, 170, 120, 0.35);
+   }
+
+   .import-status-duplicate,
+   .import-status-duplicate_in_file {
+      background: rgba(212, 177, 90, 0.15);
+      color: #d4b15a;
+      border: 1px solid rgba(212, 177, 90, 0.35);
+   }
+
+   .import-status-member_not_found,
+   .import-status-invalid {
+      background: rgba(184, 65, 65, 0.15);
+      color: #ffd1d1;
+      border: 1px solid rgba(184, 65, 65, 0.35);
+   }
+
+   .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-family: 'Jost', sans-serif;
+      transition: all 0.2s ease;
+      letter-spacing: 0.3px;
+   }
+
+   .btn-action-edit {
+      background: rgba(212, 177, 90, 0.15);
+      color: #e8cc7a;
+      border-color: rgba(212, 177, 90, 0.4);
+   }
+
+   .btn-action-edit:hover {
+      background: rgba(212, 177, 90, 0.28);
+   }
+
+   .btn-action-detail {
+      background: rgba(92, 170, 120, 0.15);
+      color: #9fd4b0;
+      border-color: rgba(92, 170, 120, 0.4);
+   }
+
+   .btn-action-detail:hover {
+      background: rgba(92, 170, 120, 0.28);
+      color: #9fd4b0;
+   }
+
+   .col-point {
+      font-weight: 700;
+      color: #e8cc7a;
+      font-family: monospace;
+      text-align: right;
+   }
+
+   .action-group {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+   }
+
    @keyframes pulse {
       0% {
          transform: scale(1);
@@ -182,7 +301,7 @@
          <h1
             style="margin: 0 0 4px 0; font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 5vw, 3rem); font-weight: 400;">
             Settings - Member</h1>
-         <p style="margin: 0; opacity: 0.85;">Klik pada baris tabel untuk mengubah data member</p>
+         <p style="margin: 0; opacity: 0.85;">Kelola data member dan point transaksi</p>
          <form id="searchForm" method="GET"
             style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;">
             <input type="text" name="search" placeholder="Search members..." value="{{ search }}"
@@ -191,6 +310,9 @@
             {% if search is not empty %}
             <a href="{{ url('settings/member') }}" class="btn-reset">Reset</a>
             {% endif %}
+            <a href="{{ url('settings/download_member_csv') }}{% if search is not empty %}?{{ http_build_query({'search': search}) }}{% endif %}"
+               class="btn-download">Download CSV</a>
+            <button type="button" class="btn-upload" id="togglePointImportBtn">Import Point CSV</button>
             <select name="per_page"
                style="padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:#203729; color:#fff;" hidden>
                <option value="10" {% if perPage==10 %}selected{% endif %}>10 per page</option>
@@ -224,6 +346,103 @@
    </div>
    {% endif %}
 
+   {% if pointImportSuccess %}
+   <div
+      style="padding:12px 16px; border:1px solid #2a9d52; background:#11361f; color:#c9f7d8; border-radius:10px; margin-bottom:18px; font-weight: 500;">
+      {{ pointImportSuccess }}
+   </div>
+   {% endif %}
+
+   {% if pointImportError %}
+   <div
+      style="padding:12px 16px; border:1px solid #b84141; background:#3a1616; color:#ffd1d1; border-radius:10px; margin-bottom:18px; font-weight: 500;">
+      {{ pointImportError }}
+   </div>
+   {% endif %}
+
+   <div class="import-panel" id="pointImportPanel" {% if pointImportPreview is empty %}style="display:none;"{% endif %}>
+      <h3 style="margin:0 0 12px; font-family:'Cormorant Garamond',serif; color:#d4b15a; font-size:1.35rem;">
+         Import Point Member (CSV)</h3>
+      <p style="margin:0 0 14px; opacity:0.85; font-size:0.9rem;">
+         Kolom wajib: no_hp, tgl_transaksi, kode_order, nominal_transaksi, jenis_transaksi, point, kategori.
+         Maks. 5MB. Duplikat <code>kode_order</code> akan dilewati.
+      </p>
+
+      {% if pointImportPreview is empty %}
+      <form method="post" action="{{ url('settings/upload_point_member') }}" enctype="multipart/form-data"
+         style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+         <input type="file" name="csv_file" accept=".csv,text/csv" required
+            style="padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff; max-width:100%;" />
+         <button type="submit" class="btn-cari">Upload &amp; Preview</button>
+      </form>
+      {% else %}
+      <div style="margin-bottom:12px; color:#e8cc7a; font-size:0.9rem;">
+         File: <strong>{{ pointImportFileName }}</strong>
+         {% if pointImportSummary %}
+         — Total {{ pointImportSummary['total'] }} Data,
+         siap impor {{ pointImportSummary['ready'] }},
+         duplikat {{ (pointImportSummary['duplicate']) + (pointImportSummary['duplicate_in_file']) }},
+         member tidak ditemukan {{ pointImportSummary['member_not_found'] }},
+         invalid {{ pointImportSummary['invalid'] }}
+         {% endif %}
+      </div>
+
+      <div id="point-import-preview" class="table-responsive"
+         style="overflow-x:auto; max-height:360px; border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:14px;">
+         <table class="table table-sm text-white" style="width:100%; border-collapse:collapse; min-width:900px;">
+            <thead>
+               <tr style="background:rgba(0,0,0,0.25); position:sticky; top:0;">
+                  <th style="padding:10px;">Baris</th>
+                  <th style="padding:10px;">No HP</th>
+                  <th style="padding:10px;">Member</th>
+                  <th style="padding:10px;">Tgl Transaksi</th>
+                  <th style="padding:10px;">Kode Order</th>
+                  <th style="padding:10px;">Nominal</th>
+                  <th style="padding:10px;">Jenis</th>
+                  <th style="padding:10px;">Point</th>
+                  <th style="padding:10px;">Kategori</th>
+                  <th style="padding:10px;">Status</th>
+               </tr>
+            </thead>
+            <tbody>
+               {# {% for row in pointImportPreview if row['status'] == 'ready' %} #}
+               {% for row in pointImportPreview %}
+               <tr>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['line'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['no_hp'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">
+                     {{ row['member_nama'] ? row['member_nama'] : '—' }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['tgl_transaksi'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08); font-family:monospace;">{{ row['kode_order'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['nominal_transaksi'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['jenis_transaksi'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['point'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['kategori'] }}</td>
+                  <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.08);">
+                     <span class="import-status import-status-{{ row['status'] }}">{{ row['status']|upper }}</span>
+                     {% if row['message'] %}
+                     <div style="font-size:0.75rem; opacity:0.8; margin-top:4px;">{{ row['message'] }}</div>
+                     {% endif %}
+                  </td>
+               </tr>
+               {% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+         <form method="post" action="{{ url('settings/confirm_point_member_import') }}">
+            <input type="hidden" name="import_token" value="{{ pointImportToken }}">
+            <button type="submit" class="btn-cari"
+               {% if pointImportSummary['ready'] is defined and pointImportSummary['ready'] == 0 %}disabled{% endif %}>
+               Konfirmasi Import ({{ pointImportSummary['ready'] }})
+            </button>
+         </form>
+         <a href="{{ url('settings/cancel_point_member_import') }}" class="btn-reset">Batal</a>
+      </div>
+      {% endif %}
+   </div>
+
    {% if members is empty %}
    <div
       style="background: rgba(16, 36, 23, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 30px; text-align: center;">
@@ -249,13 +468,17 @@
                </th>
                <th style="text-align:center; padding:14px 12px; border-bottom:2px solid rgba(255,255,255,.15);">Status
                </th>
+               <th style="text-align:right; padding:14px 12px; border-bottom:2px solid rgba(255,255,255,.15);">Point
+               </th>
                <th style="text-align:left; padding:14px 12px; border-bottom:2px solid rgba(255,255,255,.15);">Tgl Daftar
+               </th>
+               <th style="text-align:center; padding:14px 12px; border-bottom:2px solid rgba(255,255,255,.15);">Aksi
                </th>
             </tr>
          </thead>
          <tbody id="memberTableBody">
             {% for m in members %}
-            <tr class="settings-row-editable" 
+            <tr class="member-row" 
                data-id="{{ m['id'] }}" 
                data-no-member="{{ m['no_member'] }}"
                data-nama="{{ m['nama'] }}" 
@@ -282,9 +505,18 @@
                   {% if m['is_active'] %}<span class="badge-active">AKTIF</span>{% else %}<span
                      class="badge-inactive">NONAKTIF</span>{% endif %}
                </td>
+               <td class="col-point" style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08);">
+                  {{ Helpers.number(m['total_point']) }}</td>
                <td
                   style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08); font-size: 0.85rem; opacity: 0.8;">
                   {{ m['tgl_daftar'] }}</td>
+               <td style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,.08); text-align:center;">
+                  <div class="action-group">
+                     <button type="button" class="btn-action btn-action-edit btn-member-edit">Edit</button>
+                     <a href="{{ url('settings/member_point_detail/' ~ m['id']) }}"
+                        class="btn-action btn-action-detail">Detail</a>
+                  </div>
+               </td>
             </tr>
             {% endfor %}
          </tbody>
@@ -480,7 +712,9 @@
 
       if (tableBody) {
          tableBody.addEventListener('click', function (event) {
-            const row = event.target.closest('.settings-row-editable');
+            const editBtn = event.target.closest('.btn-member-edit');
+            if (!editBtn) return;
+            const row = editBtn.closest('.member-row');
             if (!row) return;
             openModalForEdit(row);
          });
@@ -495,5 +729,19 @@
             closeModal();
          }
       });
+
+      const toggleImportBtn = document.getElementById('togglePointImportBtn');
+      const importPanel = document.getElementById('pointImportPanel');
+      if (toggleImportBtn && importPanel) {
+         toggleImportBtn.addEventListener('click', function () {
+            const isHidden = importPanel.style.display === 'none';
+            importPanel.style.display = isHidden ? 'block' : 'none';
+         });
+      }
+
+      if (window.location.hash === '#point-import-preview' && importPanel) {
+         importPanel.style.display = 'block';
+         importPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
    })();
 </script>
