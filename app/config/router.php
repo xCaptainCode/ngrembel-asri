@@ -69,6 +69,11 @@ $router->addPost('/galeri/upload', [
     'controller' => 'Gallery',
     'action'     => 'uploadProcess',
 ]);
+$router->addGet('/settings/member_point_detail/([a-zA-Z0-9\-]+)', [
+    'controller' => 'settings',
+    'action'     => 'member_point_detail',
+    'id'         => 1,
+]);
 $router->addGet('/settings/edit_galeri/([a-zA-Z0-9\-]+)', [
     'controller' => 'Settings',
     'action'     => 'edit_galeri',
