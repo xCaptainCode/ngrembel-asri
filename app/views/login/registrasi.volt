@@ -402,7 +402,7 @@
                   <div class="auth-field">
                      <label class="auth-label" for="no_hp">No Telepon</label>
                      <input class="auth-input" id="no_hp" type="tel" name="no_hp" required
-                        placeholder="Masukkan no telepon">
+                        placeholder="08123456789" pattern="[0-9]{9,15}" title="Contoh: 08123456789" minlength="9" maxlength="15">
                   </div>
 
                   <div class="auth-field">
