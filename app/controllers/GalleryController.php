@@ -17,7 +17,7 @@ class GalleryController extends Controller {
         $this->posterDir   = BASE_PATH . '/public/storage/thumbnails/posters/';
     }
 
-    private $perPage = 6;
+    private $perPage = 12;
 
     public function indexAction() {
         $search = trim((string)$this->request->getQuery('q', 'string', ''));
@@ -169,6 +169,12 @@ class GalleryController extends Controller {
 
     public function downloadAction() {
         $this->view->disable();
+
+        // Release session lock to prevent blocking concurrent page loads/reloads
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         $id = $this->dispatcher->getParam('id', 'string');
 
         if (!$id) {
@@ -205,14 +211,21 @@ class GalleryController extends Controller {
         // Safe fallback MIME type if none is stored
         $mimeType = $item['mime_type'] ?: 'application/octet-stream';
 
-        // Delegate file streaming to Phalcon to avoid invalid/partial HTTP responses
+        // Clear output buffering to avoid corrupted file downloads
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         $this->response->setContentType($mimeType);
         $this->response->setHeader(
             'Content-Disposition',
             'attachment; filename="' . basename($item['original_filename']) . '"'
         );
-        $this->response->setFileToSend($fullPath);
-        return $this->response;
+        $this->response->setHeader('Content-Length', filesize($fullPath));
+
+        $this->response->sendHeaders();
+        readfile($fullPath);
+        exit;
     }
 
     public function uploadFormAction() {
@@ -226,8 +239,16 @@ class GalleryController extends Controller {
     public function uploadProcessAction() {
         $this->view->disable();
         
+        $role = (string)$this->session->get('role');
+        $userId = (string)$this->session->get('id');
+
+        // Close session immediately so other requests aren't blocked during upload processing
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         // Protect: Admin only
-        if (strtolower((string)$this->session->get('role')) !== 'admin') {
+        if (strtolower($role) !== 'admin') {
             return $this->jsonResponse(['status' => 'error', 'message' => 'Unauthorized'], 403);
         }
 
@@ -407,7 +428,7 @@ class GalleryController extends Controller {
                 'height' => $height,
                 'is_active' => $is_active ? 'true' : 'false',
                 'sort_order' => $sort_order,
-                'create_by' => (string)$this->session->get('id') ?: null
+                'create_by' => $userId ?: null
             ]);
 
             return $this->jsonResponse([
