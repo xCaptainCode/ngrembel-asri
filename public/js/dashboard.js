@@ -203,6 +203,160 @@ const cntObs = new IntersectionObserver((entries) => {
 }, { threshold: .5 });
 countEls.forEach(el => cntObs.observe(el));
 
+/* ─ MEMBER PROFILE INLINE EDIT ─ */
+(function initMemberProfile() {
+   const page = document.getElementById('member-profile-page');
+   if (!page) return;
+
+   const updateUrl = window.MEMBER_PROFILE_UPDATE_URL;
+   let activeField = null;
+
+   function showToast(message, type) {
+      if (typeof Swal !== 'undefined' && Swal.mixin) {
+         const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+               toast.onmouseenter = Swal.stopTimer;
+               toast.onmouseleave = Swal.resumeTimer;
+            }
+         });
+         Toast.fire({ icon: type || 'success', title: message });
+      }
+   }
+
+   function getInputEl(fieldEl) {
+      return fieldEl.querySelector('.profile-input, .profile-select, .profile-textarea');
+   }
+
+   function getValue(fieldEl) {
+      const input = getInputEl(fieldEl);
+      if (!input) return '';
+      return input.value.trim();
+   }
+
+   function flashInvalid(fieldEl) {
+      const input = getInputEl(fieldEl);
+      if (!input) return;
+      input.classList.add('is-invalid');
+      setTimeout(() => input.classList.remove('is-invalid'), 800);
+   }
+
+   function enterEdit(fieldEl) {
+      if (activeField && activeField !== fieldEl) cancelEdit(activeField);
+      activeField = fieldEl;
+
+      fieldEl.classList.add('is-editing');
+      fieldEl.querySelector('.profile-field-row').hidden = true;
+      const form = fieldEl.querySelector('.profile-field-form');
+      form.hidden = false;
+
+      const input = getInputEl(fieldEl);
+      if (input) {
+         if (fieldEl.dataset.field === 'password') {
+            input.value = '';
+         } else {
+            input.value = fieldEl.dataset.raw || '';
+         }
+         setTimeout(() => input.focus(), 50);
+      }
+   }
+
+   function cancelEdit(fieldEl) {
+      fieldEl.classList.remove('is-editing', 'is-saving');
+      fieldEl.querySelector('.profile-field-row').hidden = false;
+      fieldEl.querySelector('.profile-field-form').hidden = true;
+      const input = getInputEl(fieldEl);
+      if (input) input.classList.remove('is-invalid');
+      if (activeField === fieldEl) activeField = null;
+   }
+
+   async function saveField(fieldEl) {
+      const field = fieldEl.dataset.field;
+      const value = getValue(fieldEl);
+
+      if (!value) {
+         flashInvalid(fieldEl);
+         return;
+      }
+
+      fieldEl.classList.add('is-saving');
+
+      try {
+         const body = new URLSearchParams({ field, value });
+         const res = await fetch(updateUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+            body: body.toString()
+         });
+         const data = await res.json();
+
+         if (!data.success) {
+            flashInvalid(fieldEl);
+            showToast(data.message || 'Gagal menyimpan.', 'error');
+            fieldEl.classList.remove('is-saving');
+            return;
+         }
+
+         const valueEl = fieldEl.querySelector('.profile-field-value');
+         if (data.display !== undefined) {
+            valueEl.textContent = data.display;
+         }
+         if (data.raw !== undefined) {
+            fieldEl.dataset.raw = data.raw;
+         } else if (field !== 'password') {
+            fieldEl.dataset.raw = value;
+         }
+
+         if (field === 'nama') {
+            const heroName = page.querySelector('.profile-hero-name');
+            if (heroName) heroName.textContent = data.display || value;
+            const navName = document.querySelector('.profile-btn span:not(.profile-avatar)');
+            if (navName) navName.textContent = data.display || value;
+         }
+
+         cancelEdit(fieldEl);
+         showToast(data.message, 'success');
+      } catch (err) {
+         showToast('Terjadi kesalahan jaringan.', 'error');
+      }
+
+      fieldEl.classList.remove('is-saving');
+   }
+
+   page.querySelectorAll('.profile-field').forEach(fieldEl => {
+      const editBtn = fieldEl.querySelector('.profile-field-edit');
+      const saveBtn = fieldEl.querySelector('.profile-btn-save');
+      const cancelBtn = fieldEl.querySelector('.profile-btn-cancel');
+      const input = getInputEl(fieldEl);
+
+      editBtn.addEventListener('click', () => enterEdit(fieldEl));
+      saveBtn.addEventListener('click', () => saveField(fieldEl));
+      cancelBtn.addEventListener('click', () => cancelEdit(fieldEl));
+
+      if (input) {
+         input.addEventListener('keydown', (e) => {
+            if (!fieldEl.classList.contains('is-editing')) return;
+            if (e.key === 'Enter' && fieldEl.dataset.type !== 'textarea') {
+               e.preventDefault();
+               saveField(fieldEl);
+            }
+            if (e.key === 'Escape') {
+               e.preventDefault();
+               cancelEdit(fieldEl);
+            }
+         });
+      }
+   });
+
+   document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activeField) cancelEdit(activeField);
+   });
+})();
+
 /* ─ MENU TABS ─ */
 function showMenu(id, btn) {
    const panel = document.getElementById('m-' + id);

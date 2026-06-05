@@ -294,6 +294,11 @@ if (isset($_SESSION['id'])) {
         "action"     => "profile",
     ]);
 
+    $router->addPost("/member-profile/update",[
+        "controller" => "member", 
+        "action"     => "updateField",
+    ]);
+
 } else {
     // Not logged in.
     // The defaults already point to index/index
