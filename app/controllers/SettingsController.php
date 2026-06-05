@@ -39,16 +39,16 @@ class SettingsController extends Controller {
       $params = [];
 
       if ($search !== '') {
-          $whereClause = "WHERE (nama ILIKE :search 
-                          OR email ILIKE :search 
-                          OR no_hp ILIKE :search 
-                          OR no_member ILIKE :search)";
+          $whereClause = "WHERE (m.nama ILIKE :search 
+                          OR m.email ILIKE :search 
+                          OR m.no_hp ILIKE :search 
+                          OR m.no_member ILIKE :search)";
           $params['search'] = '%' . $search . '%';
       }
 
       // Count total members matching criteria
       $countResult = $this->db->fetchOne(
-          "SELECT COUNT(*) AS total FROM members {$whereClause}",
+          "SELECT COUNT(*) AS total FROM members m {$whereClause}",
           \Phalcon\Db::FETCH_ASSOC,
           $params
       );
@@ -62,7 +62,23 @@ class SettingsController extends Controller {
       $params['limit'] = $perPage;
       $params['offset'] = $offset;
       $members = $this->db->fetchAll(
-          "SELECT * FROM members {$whereClause} ORDER BY nama ASC LIMIT :limit OFFSET :offset",
+          "SELECT m.*,
+                  COALESCE(pt_agg.total_point, 0) AS total_point
+           FROM members m
+           LEFT JOIN (
+              SELECT member_id,
+                     SUM(
+                        CASE
+                           WHEN jenis_poin = 'keluar' THEN -point
+                           ELSE point
+                        END
+                     ) AS total_point
+              FROM poin_transaksi
+              GROUP BY member_id
+           ) pt_agg ON pt_agg.member_id = m.id
+           {$whereClause}
+           ORDER BY m.nama ASC
+           LIMIT :limit OFFSET :offset",
           \Phalcon\Db::FETCH_ASSOC,
           $params
       );
@@ -86,6 +102,325 @@ class SettingsController extends Controller {
       $this->view->setVar('updateError', $this->session->get('member_update_error'));
       $this->session->remove('member_update_success');
       $this->session->remove('member_update_error');
+
+      $this->view->setVar('pointImportPreview', $this->session->get('point_import_preview'));
+      $this->view->setVar('pointImportSummary', $this->session->get('point_import_summary'));
+      $this->view->setVar('pointImportToken', $this->session->get('point_import_token'));
+      $this->view->setVar('pointImportFileName', $this->session->get('point_import_original_name'));
+      $this->view->setVar('pointImportSuccess', $this->session->get('point_import_success'));
+      $this->view->setVar('pointImportError', $this->session->get('point_import_error'));
+      $this->session->remove('point_import_success');
+      $this->session->remove('point_import_error');
+   }
+
+   public function member_point_detailAction() {
+      $id = trim((string) $this->dispatcher->getParam('id', 'string'));
+
+      if ($id === '') {
+         return $this->response->redirect('settings/member');
+      }
+
+      $member = $this->db->fetchOne(
+         'SELECT * FROM members WHERE id = :id LIMIT 1',
+         \Phalcon\Db::FETCH_ASSOC,
+         ['id' => $id]
+      );
+
+      if (! $member) {
+         $this->session->set('member_update_error', 'Member tidak ditemukan.');
+         return $this->response->redirect('settings/member');
+      }
+
+      $totalPointResult = $this->db->fetchOne(
+         "SELECT COALESCE(SUM(
+             CASE WHEN jenis_poin = 'keluar' THEN -point ELSE point END
+          ), 0) AS total_point
+          FROM poin_transaksi
+          WHERE member_id = :member_id",
+         \Phalcon\Db::FETCH_ASSOC,
+         ['member_id' => $id]
+      );
+
+      // Pagination
+      $perPage = 5;
+      $currentPage = max(1, (int) $this->request->getQuery('page', 'int', 1));
+
+      $countResult = $this->db->fetchOne(
+         'SELECT COUNT(*) AS total FROM poin_transaksi WHERE member_id = :member_id',
+         \Phalcon\Db::FETCH_ASSOC,
+         ['member_id' => $id]
+      );
+      $totalTransactions = $countResult ? (int) $countResult['total'] : 0;
+      $totalPages = max(1, (int) ceil($totalTransactions / $perPage));
+      if ($currentPage > $totalPages) {
+         $currentPage = $totalPages;
+      }
+      $offset = ($currentPage - 1) * $perPage;
+
+      $transactions = $this->db->fetchAll(
+         'SELECT *
+          FROM poin_transaksi
+          WHERE member_id = :member_id
+          ORDER BY tgl_transaksi DESC NULLS LAST, created_at DESC
+          LIMIT ' . $perPage . ' OFFSET ' . $offset,
+         \Phalcon\Db::FETCH_ASSOC,
+         ['member_id' => $id]
+      );
+
+      $this->view->setVar('member', $member);
+      $this->view->setVar('totalPoint', $totalPointResult ? (int) $totalPointResult['total_point'] : 0);
+      $this->view->setVar('transactions', $transactions ?: []);
+      $this->view->setVar('currentPage', $currentPage);
+      $this->view->setVar('totalPages', $totalPages);
+      $this->view->setVar('totalTransactions', $totalTransactions);
+      $this->view->setVar('perPage', $perPage);
+   }
+
+   public function download_member_csvAction() {
+      $this->view->disable();
+
+      $search = trim((string) $this->request->getQuery('search', 'string', ''));
+      $whereClause = '';
+      $params = [];
+
+      if ($search !== '') {
+         $whereClause = "WHERE (nama ILIKE :search
+                         OR email ILIKE :search
+                         OR no_hp ILIKE :search
+                         OR no_member ILIKE :search)";
+         $params['search'] = '%' . $search . '%';
+      }
+
+      $members = $this->db->fetchAll(
+         "SELECT nama, email, no_hp, tgl_lahir, gender, alamat, tgl_daftar
+          FROM members {$whereClause}
+          ORDER BY nama ASC",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+
+      $handle = fopen('php://temp', 'r+');
+      if ($handle === false) {
+         $this->response->setStatusCode(500);
+         return $this->response->setContent('Gagal membuat file CSV.');
+      }
+
+      fwrite($handle, "\xEF\xBB\xBF");
+      fputcsv($handle, ['nama', 'email', 'no_telp', 'tgl_lahir', 'gender', 'alamat', 'tgl_daftar']);
+
+      foreach ($members ?: [] as $member) {
+         $gender = (string) ($member['gender'] ?? '');
+         if ($gender === 'L') {
+            $gender = 'Laki-laki';
+         } elseif ($gender === 'P') {
+            $gender = 'Perempuan';
+         }
+
+         fputcsv($handle, [
+            (string) ($member['nama'] ?? ''),
+            (string) ($member['email'] ?? ''),
+            (string) ($member['no_hp'] ?? ''),
+            $this->formatCsvDate($member['tgl_lahir'] ?? ''),
+            $gender,
+            (string) ($member['alamat'] ?? ''),
+            $this->formatCsvDate($member['tgl_daftar'] ?? ''),
+         ]);
+      }
+
+      rewind($handle);
+      $csv = stream_get_contents($handle);
+      fclose($handle);
+
+      $filename = 'data_member_' . date('Y-m-d_His') . '.csv';
+
+      $this->response->setHeader('Content-Type', 'text/csv; charset=UTF-8');
+      $this->response->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
+      $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      $this->response->setContent($csv !== false ? $csv : '');
+
+      return $this->response;
+   }
+
+   private function formatCsvDate($value) {
+      if ($value === null || $value === '') {
+         return '';
+      }
+
+      $str = trim((string) $value);
+      if (preg_match('/^\d{4}-\d{2}-\d{2}/', $str)) {
+         return substr($str, 0, 10);
+      }
+
+      $timestamp = strtotime($str);
+      return $timestamp ? date('Y-m-d', $timestamp) : $str;
+   }
+
+   public function upload_point_memberAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/member');
+      }
+
+      $this->clearPointImportSession(true);
+
+      if (! $this->request->hasFiles()) {
+         $this->session->set('point_import_error', 'File CSV wajib dipilih.');
+         return $this->response->redirect('settings/member');
+      }
+
+      $upload = null;
+      foreach ($this->request->getUploadedFiles() as $file) {
+         if ($file->getKey() === 'csv_file') {
+            $upload = $file;
+            break;
+         }
+      }
+      if (! $upload) {
+         $files = $this->request->getUploadedFiles();
+         $upload = $files[0] ?? null;
+      }
+
+      if (! $upload || $upload->getError() !== UPLOAD_ERR_OK) {
+         $this->session->set('point_import_error', 'Upload file gagal. Periksa ukuran file (maks. 5MB).');
+         return $this->response->redirect('settings/member');
+      }
+
+      $size = (int) $upload->getSize();
+      if ($size <= 0 || $size > PointMemberCsvImport::MAX_FILE_BYTES) {
+         $this->session->set('point_import_error', 'Ukuran file melebihi batas 5MB atau file kosong.');
+         return $this->response->redirect('settings/member');
+      }
+
+      $originalName = (string) $upload->getName();
+      $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+      if ($extension !== 'csv') {
+         $this->session->set('point_import_error', 'Hanya file berformat .csv yang diperbolehkan.');
+         return $this->response->redirect('settings/member');
+      }
+
+      $token = bin2hex(random_bytes(16));
+      $storedPath = PointMemberCsvImport::storageDir() . DIRECTORY_SEPARATOR . $token . '.csv';
+
+      if (! $upload->moveTo($storedPath)) {
+         $this->session->set('point_import_error', 'Gagal menyimpan file sementara.');
+         return $this->response->redirect('settings/member');
+      }
+
+      try {
+         $importer = new PointMemberCsvImport($this->db);
+         $rows = $importer->parseFile($storedPath);
+         $summary = $importer->buildSummary($rows);
+
+         $previewRows = [];
+         foreach ($rows as $row) {
+            $previewRows[] = [
+               'line' => $row['line'],
+               'no_hp' => $row['no_hp'],
+               'tgl_transaksi' => $row['tgl_transaksi'],
+               'kode_order' => $row['kode_order'],
+               'nominal_transaksi' => $row['nominal_transaksi'],
+               'jenis_transaksi' => $row['jenis_transaksi'],
+               'point' => $row['point'],
+               'kategori' => $row['kategori'],
+               'member_nama' => $row['member_nama'],
+               'status' => $row['status'],
+               'message' => $row['message'],
+            ];
+         }
+
+         $this->session->set('point_import_token', $token);
+         $this->session->set('point_import_file', $storedPath);
+         $this->session->set('point_import_original_name', $originalName);
+         $this->session->set('point_import_preview', $previewRows);
+         $this->session->set('point_import_summary', $summary);
+      } catch (\Throwable $e) {
+         if (is_file($storedPath)) {
+            @unlink($storedPath);
+         }
+         $this->session->set('point_import_error', 'Gagal memproses CSV: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/member#point-import-preview');
+   }
+
+   public function confirm_point_member_importAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/member');
+      }
+
+      $token = trim((string) $this->request->getPost('import_token', 'string'));
+      $sessionToken = (string) $this->session->get('point_import_token');
+      $storedPath = (string) $this->session->get('point_import_file');
+      $originalName = (string) $this->session->get('point_import_original_name');
+
+      if ($token === '' || $token !== $sessionToken || $storedPath === '' || ! is_file($storedPath)) {
+         $this->clearPointImportSession(true);
+         $this->session->set('point_import_error', 'Sesi impor tidak valid atau file sudah kedaluwarsa. Upload ulang CSV.');
+         return $this->response->redirect('settings/member');
+      }
+
+      try {
+         $importer = new PointMemberCsvImport($this->db);
+         $rows = $importer->parseFile($storedPath);
+         $result = $importer->importReadyRows(
+            $rows,
+            $this->getPointImportActor(),
+            $originalName !== '' ? $originalName : basename($storedPath)
+         );
+
+         $this->clearPointImportSession(true);
+
+         $this->session->set(
+            'point_import_success',
+            sprintf(
+               'Impor selesai: %d data masuk DB, %d duplikat dilewati, %d baris error/ditolak. Log audit tercatat.',
+               $result['inserted'],
+               $result['skipped_duplicate'],
+               $result['skipped_error']
+            )
+         );
+      } catch (\Throwable $e) {
+         $this->session->set('point_import_error', 'Gagal mengimpor data: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/member');
+   }
+
+   public function cancel_point_member_importAction() {
+      $this->view->disable();
+      $this->clearPointImportSession(true);
+      $this->session->set('point_import_error', 'Impor dibatalkan.');
+      return $this->response->redirect('settings/member');
+   }
+
+   private function clearPointImportSession($deleteFile = false) {
+      if ($deleteFile) {
+         $storedPath = (string) $this->session->get('point_import_file');
+         if ($storedPath !== '' && is_file($storedPath)) {
+            @unlink($storedPath);
+         }
+      }
+
+      $this->session->remove('point_import_token');
+      $this->session->remove('point_import_file');
+      $this->session->remove('point_import_original_name');
+      $this->session->remove('point_import_preview');
+      $this->session->remove('point_import_summary');
+   }
+
+   private function getPointImportActor() {
+      $nama = trim((string) $this->session->get('nama'));
+      $id = trim((string) $this->session->get('id'));
+      if ($nama !== '' && $id !== '') {
+         return $nama . ' (' . $id . ')';
+      }
+      if ($nama !== '') {
+         return $nama;
+      }
+      return $id !== '' ? $id : 'admin';
    }
 
    public function update_memberAction() {

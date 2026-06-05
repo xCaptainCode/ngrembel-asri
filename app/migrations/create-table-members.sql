@@ -1,4 +1,4 @@
--- Active: 1779269040582@@localhost@5432@ngrembel_asri@public
+-- Active: 1776004703790@@127.0.0.1@5432@ngrembel_asri@public
 -- members	id, no_member, nama, email, no_hp, password (hashed), level, total_poin, foto, created_at
 -- poin_transaksi	id, member_id (FK), tipe [masuk|keluar], jumlah_poin, keterangan, created_by, tanggal
 -- transaksi	id, member_id (FK), kode_transaksi, total_bayar, keterangan, tanggal_transaksi
@@ -130,6 +130,11 @@ LIMIT 1
 -- ALTER TABLE members ADD COLUMN role VARCHAR(10) DEFAULT 'member';
 
 SELECT * FROM members;
+SELECT * FROM members WHERE tgl_lahir IS NOT NULL;
+SELECT * FROM members WHERE tgl_lahir IS NULL AND role = 'member';
 
 -- INSERT INTO members (nama, no_hp, email, password, role) VALUES ('Admin', '08135792468', 'admin@example.com', crypt('admin123', gen_salt('bf')), 'admin');
 
+-- ALTER TABLE members ALTER COLUMN alamat TYPE VARCHAR(255);
+
+SELECT * FROM poin_transaksi;
