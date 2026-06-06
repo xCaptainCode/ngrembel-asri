@@ -10,7 +10,7 @@
 
     /* Responsive Masonry Grid */
     .masonry-grid {
-        column-count: 3;
+        column-count: 5;
         column-gap: 1rem;
         width: 100%;
         margin-top: 1rem;
@@ -926,7 +926,7 @@
         const getColumnCount = () => {
             if (window.innerWidth <= 576) return 1;
             if (window.innerWidth <= 992) return 2;
-            return 3;
+            return 5;
         };
 
         const getGap = () => (window.innerWidth <= 992 ? 20 : 24);
