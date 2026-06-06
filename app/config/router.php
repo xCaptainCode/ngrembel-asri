@@ -74,6 +74,12 @@ $router->addGet('/settings/member_point_detail/([a-zA-Z0-9\-]+)', [
     'action'     => 'member_point_detail',
     'id'         => 1,
 ]);
+$router->addGet('/settings/order_detail/([A-Z]+)/([a-zA-Z0-9]+)', [
+    'controller' => 'settings',
+    'action'     => 'order_detail',
+    'jenis'      => 1,
+    'kode_order' => 2,
+]);
 $router->addGet('/settings/edit_galeri/([a-zA-Z0-9\-]+)', [
     'controller' => 'Settings',
     'action'     => 'edit_galeri',
@@ -287,6 +293,13 @@ if (isset($_SESSION['id'])) {
     $router->add("/member-history",[
         "controller" => "member", 
         "action"     => "history",
+    ]);
+
+    $router->addGet('/member-order-detail/([A-Z]+)/([a-zA-Z0-9]+)', [
+        'controller' => 'member',
+        'action'     => 'order_detail',
+        'jenis'      => 1,
+        'kode_order' => 2,
     ]);
 
     $router->add("/member-profile",[

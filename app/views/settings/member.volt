@@ -313,6 +313,7 @@
             <a href="{{ url('settings/download_member_csv') }}{% if search is not empty %}?{{ http_build_query({'search': search}) }}{% endif %}"
                class="btn-download">Download CSV</a>
             <button type="button" class="btn-upload" id="togglePointImportBtn">Import Point CSV</button>
+            <button type="button" class="btn-upload" id="toggleOrderImportBtn" style="border-color:rgba(120,160,220,0.45); color:#a8c4f0;">Import Riwayat Transaksi</button>
             <select name="per_page"
                style="padding:8px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:#203729; color:#fff;" hidden>
                <option value="10" {% if perPage==10 %}selected{% endif %}>10 per page</option>
@@ -359,6 +360,151 @@
       {{ pointImportError }}
    </div>
    {% endif %}
+
+   {% if orderImportSuccess %}
+   <div
+      style="padding:12px 16px; border:1px solid #2a9d52; background:#11361f; color:#c9f7d8; border-radius:10px; margin-bottom:18px; font-weight: 500;">
+      {{ orderImportSuccess }}
+   </div>
+   {% endif %}
+
+   {% if orderImportError %}
+   <div
+      style="padding:12px 16px; border:1px solid #b84141; background:#3a1616; color:#ffd1d1; border-radius:10px; margin-bottom:18px; font-weight: 500;">
+      {{ orderImportError }}
+   </div>
+   {% endif %}
+
+   <div class="import-panel" id="orderImportPanel" {% if orderImportOrdersPreview is empty %}style="display:none;"{% endif %}>
+      <h3 style="margin:0 0 12px; font-family:'Cormorant Garamond',serif; color:#a8c4f0; font-size:1.35rem;">
+         Import Riwayat Transaksi (orders + order_items)</h3>
+      <p style="margin:0 0 14px; opacity:0.85; font-size:0.9rem;">
+         Upload 2 file CSV sekaligus. Maks. 5MB per file. Duplikat <code>kode_order</code> (orders) dan
+         <code>kode_order + item</code> (order_items) akan dilewati.
+      </p>
+
+      {% if orderImportOrdersPreview is empty %}
+      <form method="post" action="{{ url('settings/upload_order_history') }}" enctype="multipart/form-data"
+         style="display:grid; gap:12px; max-width:720px;">
+         <label style="display:grid; gap:6px;">
+            <span style="font-size:0.85rem; font-weight:600; opacity:0.85;">orders.csv</span>
+            <input type="file" name="orders_csv" accept=".csv,text/csv" required
+               style="padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff;" />
+         </label>
+         <label style="display:grid; gap:6px;">
+            <span style="font-size:0.85rem; font-weight:600; opacity:0.85;">order_items.csv</span>
+            <input type="file" name="order_items_csv" accept=".csv,text/csv" required
+               style="padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); color:#fff;" />
+         </label>
+         <div>
+            <button type="submit" class="btn-cari">Upload &amp; Preview</button>
+         </div>
+      </form>
+      {% else %}
+      <div style="margin-bottom:12px; color:#e8cc7a; font-size:0.9rem;">
+         <div><strong>orders:</strong> {{ orderImportOrdersFileName }}
+            {% if orderImportSummary['orders'] is defined %}
+            — Total {{ orderImportSummary['orders']['total'] }},
+            siap {{ orderImportSummary['orders']['ready'] }},
+            duplikat {{ orderImportSummary['orders']['duplicate'] + orderImportSummary['orders']['duplicate_in_file'] }},
+            invalid {{ orderImportSummary['orders']['invalid'] }}
+            {% endif %}
+         </div>
+         <div style="margin-top:4px;"><strong>order_items:</strong> {{ orderImportItemsFileName }}
+            {% if orderImportSummary['items'] is defined %}
+            — Total {{ orderImportSummary['items']['total'] }},
+            siap {{ orderImportSummary['items']['ready'] }},
+            duplikat {{ orderImportSummary['items']['duplicate'] + orderImportSummary['items']['duplicate_in_file'] }},
+            invalid {{ orderImportSummary['items']['invalid'] }}
+            {% endif %}
+         </div>
+      </div>
+
+      <h4 style="margin:0 0 8px; color:#d4b15a; font-size:1rem;">Preview orders (10 baris pertama)</h4>
+      <div class="table-responsive"
+         style="overflow-x:auto; max-height:280px; border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:14px;">
+         <table class="table table-sm text-white" style="width:100%; border-collapse:collapse; min-width:1000px;">
+            <thead>
+               <tr style="background:rgba(0,0,0,0.25); position:sticky; top:0;">
+                  <th style="padding:8px;">Baris</th>
+                  <th style="padding:8px;">Jenis</th>
+                  <th style="padding:8px;">Kode Order</th>
+                  <th style="padding:8px;">Tanggal</th>
+                  <th style="padding:8px;">Jam</th>
+                  <th style="padding:8px;">Nama</th>
+                  <th style="padding:8px;">Total Bayar</th>
+                  <th style="padding:8px;">Status</th>
+               </tr>
+            </thead>
+            <tbody>
+               {% for row in orderImportOrdersPreview %}
+               <tr>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['line'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['jenis'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08); font-family:monospace;">{{ row['kode_order'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['tanggal'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['jam'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['nama'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['total_bayar'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">
+                     <span class="import-status import-status-{{ row['status'] }}">{{ row['status']|upper }}</span>
+                     {% if row['message'] %}<div style="font-size:0.72rem; opacity:0.8; margin-top:3px;">{{ row['message'] }}</div>{% endif %}
+                  </td>
+               </tr>
+               {% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      <h4 style="margin:0 0 8px; color:#d4b15a; font-size:1rem;">Preview order_items (10 baris pertama)</h4>
+      <div id="order-import-preview" class="table-responsive"
+         style="overflow-x:auto; max-height:280px; border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:14px;">
+         <table class="table table-sm text-white" style="width:100%; border-collapse:collapse; min-width:900px;">
+            <thead>
+               <tr style="background:rgba(0,0,0,0.25); position:sticky; top:0;">
+                  <th style="padding:8px;">Baris</th>
+                  <th style="padding:8px;">Jenis</th>
+                  <th style="padding:8px;">Kode Order</th>
+                  <th style="padding:8px;">Item</th>
+                  <th style="padding:8px;">Qty</th>
+                  <th style="padding:8px;">Satuan</th>
+                  <th style="padding:8px;">Total</th>
+                  <th style="padding:8px;">Status</th>
+               </tr>
+            </thead>
+            <tbody>
+               {% for row in orderImportItemsPreview %}
+               <tr>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['line'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['jenis'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08); font-family:monospace;">{{ row['kode_order'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['item'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['qty'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['satuan'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">{{ row['total'] }}</td>
+                  <td style="padding:8px; border-bottom:1px solid rgba(255,255,255,.08);">
+                     <span class="import-status import-status-{{ row['status'] }}">{{ row['status']|upper }}</span>
+                     {% if row['message'] %}<div style="font-size:0.72rem; opacity:0.8; margin-top:3px;">{{ row['message'] }}</div>{% endif %}
+                  </td>
+               </tr>
+               {% endfor %}
+            </tbody>
+         </table>
+      </div>
+
+      {% set orderReady = orderImportSummary['orders']['ready'] %}
+      {% set itemReady = orderImportSummary['items']['ready'] %}
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+         <form method="post" action="{{ url('settings/confirm_order_history_import') }}">
+            <input type="hidden" name="import_token" value="{{ orderImportToken }}">
+            <button type="submit" class="btn-cari" {% if orderReady + itemReady == 0 %}disabled{% endif %}>
+               Konfirmasi Import ({{ orderReady + itemReady }})
+            </button>
+         </form>
+         <a href="{{ url('settings/cancel_order_history_import') }}" class="btn-reset">Batal</a>
+      </div>
+      {% endif %}
+   </div>
 
    <div class="import-panel" id="pointImportPanel" {% if pointImportPreview is empty %}style="display:none;"{% endif %}>
       <h3 style="margin:0 0 12px; font-family:'Cormorant Garamond',serif; color:#d4b15a; font-size:1.35rem;">
@@ -730,18 +876,32 @@
          }
       });
 
-      const toggleImportBtn = document.getElementById('togglePointImportBtn');
-      const importPanel = document.getElementById('pointImportPanel');
-      if (toggleImportBtn && importPanel) {
-         toggleImportBtn.addEventListener('click', function () {
-            const isHidden = importPanel.style.display === 'none';
-            importPanel.style.display = isHidden ? 'block' : 'none';
+      const togglePointImportBtn = document.getElementById('togglePointImportBtn');
+      const pointImportPanel = document.getElementById('pointImportPanel');
+      if (togglePointImportBtn && pointImportPanel) {
+         togglePointImportBtn.addEventListener('click', function () {
+            const isHidden = pointImportPanel.style.display === 'none';
+            pointImportPanel.style.display = isHidden ? 'block' : 'none';
          });
       }
 
-      if (window.location.hash === '#point-import-preview' && importPanel) {
-         importPanel.style.display = 'block';
-         importPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const toggleOrderImportBtn = document.getElementById('toggleOrderImportBtn');
+      const orderImportPanel = document.getElementById('orderImportPanel');
+      if (toggleOrderImportBtn && orderImportPanel) {
+         toggleOrderImportBtn.addEventListener('click', function () {
+            const isHidden = orderImportPanel.style.display === 'none';
+            orderImportPanel.style.display = isHidden ? 'block' : 'none';
+         });
+      }
+
+      if (window.location.hash === '#point-import-preview' && pointImportPanel) {
+         pointImportPanel.style.display = 'block';
+         pointImportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      if (window.location.hash === '#order-import-preview' && orderImportPanel) {
+         orderImportPanel.style.display = 'block';
+         orderImportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
    })();
 </script>

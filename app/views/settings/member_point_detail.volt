@@ -152,6 +152,27 @@
       border-color: rgba(255, 255, 255, 0.05);
       color: rgba(255, 255, 255, 0.4);
    }
+
+   .btn-order-detail {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: none;
+      background: rgba(120, 160, 220, 0.15);
+      color: #a8c4f0;
+      border: 1px solid rgba(120, 160, 220, 0.4);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+   }
+
+   .btn-order-detail:hover {
+      background: rgba(120, 160, 220, 0.28);
+      color: #a8c4f0;
+   }
 </style>
 
 <section style="padding: 120px 5% 60px; min-height: 70vh;">
@@ -243,6 +264,7 @@
                   <th style="text-align:right; padding:12px;">Point</th>
                   <th style="text-align:left; padding:12px;">Kategori</th>
                   <th style="text-align:left; padding:12px;">Dibuat Oleh</th>
+                  <th style="text-align:center; padding:12px;">Aksi</th>
                </tr>
             </thead>
             <tbody>
@@ -265,6 +287,14 @@
                   <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,.08);">{{ t['kategori'] }}</td>
                   <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,.08); opacity:0.85; font-size:0.85rem;">
                      {{ t['created_by'] ? t['created_by'] : '—' }}</td>
+                  <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,.08); text-align:center;">
+                     {% if t['kode_order'] and t['kategori'] %}
+                     <a href="{{ url('settings/order_detail/' ~ t['kategori']|upper ~ '/' ~ t['kode_order']) }}?member_id={{ member['id'] }}"
+                        class="btn-order-detail">Detail Order</a>
+                     {% else %}
+                     —
+                     {% endif %}
+                  </td>
                </tr>
                {% endfor %}
             </tbody>

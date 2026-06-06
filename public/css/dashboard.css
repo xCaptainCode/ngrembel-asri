@@ -2759,6 +2759,42 @@
       letter-spacing: .5px;
    }
 
+   .history-order-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .35rem .75rem;
+      border-radius: 20px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .4px;
+      text-decoration: none;
+      text-transform: uppercase;
+      background: rgba(120, 160, 220, .15);
+      color: #a8c4f0;
+      border: 1px solid rgba(120, 160, 220, .35);
+      transition: background .2s, transform .2s;
+      white-space: nowrap;
+   }
+
+   .history-order-btn:hover {
+      background: rgba(120, 160, 220, .28);
+      color: #a8c4f0;
+      transform: translateY(-1px);
+   }
+
+   .history-alert {
+      max-width: 1100px;
+      margin: 0 auto 1rem;
+      padding: .85rem 1.1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(184, 65, 65, .35);
+      background: rgba(184, 65, 65, .12);
+      color: #ffd1d1;
+      font-size: .9rem;
+      font-weight: 500;
+   }
+
    .history-badge {
       display: inline-block;
       padding: .25rem .65rem;
