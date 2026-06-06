@@ -17,7 +17,7 @@ class GalleryController extends Controller {
         $this->posterDir   = BASE_PATH . '/public/storage/thumbnails/posters/';
     }
 
-    private $perPage = 12;
+    private $perPage = 15;
 
     public function indexAction() {
         $search = trim((string)$this->request->getQuery('q', 'string', ''));
