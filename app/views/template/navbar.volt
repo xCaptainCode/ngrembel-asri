@@ -5,6 +5,7 @@
    </a>
    <ul class="nav-menu" id="navMenu">
       <li class="{{ this.request.getURI() == url('') ? 'active' : '' }}"><a href="{{ url('') }}">Dashboard</a></li>
+      <li class="{{ this.request.getURI() == url('promo') ? 'active' : '' }}"><a href="{{ url('promo') }}">Promo</a></li>
       <li class="{{ this.request.getURI() == url('price-list') ? 'active' : '' }}"><a href="{{ url('price-list') }}">Price List</a></li>
       <li class="nav-item-dropdown {{ this.request.getURI() == url('wahana') ? 'active' : '' }}">
          <a href="javascript:void(0);" class="nav-link-main nav-sub-toggle" data-target="wahanaSubmenu">
@@ -35,6 +36,7 @@
          <ul class="nav-submenu" id="settingsSubmenu">
             <li class="{{ this.request.getURI() == url('settings/member') ? 'active' : '' }}"><a href="{{ url('settings/member') }}">Member <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/dashboard') ? 'active' : '' }}"><a href="{{ url('settings/dashboard') }}">Dashboard <i class="fas fa-check-circle"></i></a></li>
+            <li class="{{ this.request.getURI() == url('settings/promotions') ? 'active' : '' }}"><a href="{{ url('settings/promotions') }}">Promo <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/price_list') ? 'active' : '' }}"><a href="{{ url('settings/price_list') }}">Price List <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/permainan') ? 'active' : '' }}"><a href="{{ url('settings/permainan') }}">Permainan <i class="fas fa-check-circle"></i></a></li>
             <li class="{{ this.request.getURI() == url('settings/paintball') ? 'active' : '' }}"><a href="{{ url('settings/paintball') }}">Paintball <i class="fas fa-check-circle"></i></a></li>

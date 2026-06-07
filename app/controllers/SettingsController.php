@@ -3869,4 +3869,317 @@ class SettingsController extends Controller {
 
       return $this->response->redirect('settings/kritik_saran');
    }
+
+   public function promotionsAction() {
+      $search  = trim((string) $this->request->getQuery('search', 'string', ''));
+      $page    = max(1, (int) $this->request->getQuery('page', 'int', 1));
+      $perPage = (int) $this->request->getQuery('per_page', 'int', 10);
+
+      if (!in_array($perPage, [10, 25, 50], true)) {
+         $perPage = 10;
+      }
+
+      $whereClause = "";
+      $params = [];
+
+      if ($search !== '') {
+         $whereClause .= "WHERE (p.name ILIKE :search OR p.description ILIKE :search)";
+         $params['search'] = '%' . $search . '%';
+      }
+
+      // Count total data matching criteria
+      $countResult = $this->db->fetchOne(
+         "SELECT COUNT(*) AS total FROM promotions p {$whereClause}",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+      $totalData = $countResult ? (int) $countResult['total'] : 0;
+      $totalPages = max(1, (int) ceil($totalData / $perPage));
+
+      if ($page > $totalPages) $page = $totalPages;
+      $offset = ($page - 1) * $perPage;
+
+      // Fetch data for current page
+      $params['limit'] = $perPage;
+      $params['offset'] = $offset;
+      
+      $promotionsList = $this->db->fetchAll(
+         "SELECT p.*
+          FROM promotions p
+          {$whereClause}
+          ORDER BY p.end_date DESC, p.created_at DESC
+          LIMIT :limit OFFSET :offset",
+         \Phalcon\Db::FETCH_ASSOC,
+         $params
+      );
+
+      $this->view->setVar('promotionsList', $promotionsList ?: []);
+      $this->view->setVar('totalData', $totalData);
+      $this->view->setVar('currentPage', $page);
+      $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('totalPages', $totalPages);
+      $this->view->setVar('search', $search);
+      $this->view->setVar('updateSuccess', $this->session->get('promotions_update_success'));
+      $this->view->setVar('updateError', $this->session->get('promotions_update_error'));
+      $this->session->remove('promotions_update_success');
+      $this->session->remove('promotions_update_error');
+   }
+
+   public function create_promotionAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/promotions');
+      }
+
+      $name = trim((string) $this->request->getPost('name', 'string'));
+      $description = trim((string) $this->request->getPost('description', 'string'));
+      $startDate = trim((string) $this->request->getPost('start_date', 'string'));
+      $endDate = trim((string) $this->request->getPost('end_date', 'string'));
+      $isActiveVal = trim((string) $this->request->getPost('is_active', 'string'));
+      $imageUrl = trim((string) $this->request->getPost('image_url', 'string'));
+
+      if ($name === '' || $startDate === '' || $endDate === '') {
+         $this->session->set('promotions_update_error', 'Nama promosi, tanggal mulai, dan tanggal berakhir wajib diisi.');
+         return $this->response->redirect('settings/promotions');
+      }
+
+      $isActive = ($isActiveVal === '1');
+
+      try {
+         $sql = "INSERT INTO promotions (name, description, image_url, start_date, end_date, is_active, created_at, updated_at)
+                 VALUES (:name, :description, :image_url, :start_date, :end_date, :is_active, NOW(), NOW())";
+         
+         $this->db->execute($sql, [
+            'name' => $name,
+            'description' => $description !== '' ? $description : null,
+            'image_url' => $imageUrl !== '' ? $imageUrl : null,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'is_active' => $isActive ? 'TRUE' : 'FALSE'
+         ]);
+
+         $this->session->set('promotions_update_success', "Promosi {$name} berhasil ditambahkan.");
+      } catch (\Throwable $e) {
+         $this->session->set('promotions_update_error', 'Gagal menambahkan promosi: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/promotions');
+   }
+
+   public function update_promotionAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/promotions');
+      }
+
+      $id = (int) $this->request->getPost('id', 'int');
+      $name = trim((string) $this->request->getPost('name', 'string'));
+      $description = trim((string) $this->request->getPost('description', 'string'));
+      $startDate = trim((string) $this->request->getPost('start_date', 'string'));
+      $endDate = trim((string) $this->request->getPost('end_date', 'string'));
+      $isActiveVal = trim((string) $this->request->getPost('is_active', 'string'));
+      $imageUrl = trim((string) $this->request->getPost('image_url', 'string'));
+
+      if ($id <= 0 || $name === '' || $startDate === '' || $endDate === '') {
+         $this->session->set('promotions_update_error', 'Input tidak valid.');
+         return $this->response->redirect('settings/promotions');
+      }
+
+      $isActive = ($isActiveVal === '1');
+
+      try {
+         $existing = $this->db->fetchOne(
+            "SELECT image_url FROM promotions WHERE id = :id LIMIT 1",
+            \Phalcon\Db::FETCH_ASSOC,
+            ['id' => $id]
+         );
+
+         if (! $existing) {
+            $this->session->set('promotions_update_error', 'Data promosi tidak ditemukan.');
+            return $this->response->redirect('settings/promotions');
+         }
+
+         $finalImageUrl = $imageUrl;
+         if ($imageUrl === '' && $existing['image_url']) {
+            $finalImageUrl = $existing['image_url'];
+         }
+
+         $sql = "UPDATE promotions 
+                 SET name = :name,
+                     description = :description,
+                     image_url = :image_url,
+                     start_date = :start_date,
+                     end_date = :end_date,
+                     is_active = :is_active,
+                     updated_at = NOW()
+                 WHERE id = :id";
+
+         $this->db->execute($sql, [
+            'name' => $name,
+            'description' => $description !== '' ? $description : null,
+            'image_url' => $finalImageUrl !== '' ? $finalImageUrl : null,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'is_active' => $isActive ? 'TRUE' : 'FALSE',
+            'id' => $id
+         ]);
+
+         $this->session->set('promotions_update_success', "Data promosi {$name} berhasil diperbarui.");
+      } catch (\Throwable $e) {
+         $this->session->set('promotions_update_error', 'Gagal memperbarui data promosi: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/promotions');
+   }
+
+   public function delete_promotionAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/promotions');
+      }
+
+      $id = (int) $this->request->getPost('id', 'int');
+
+      if ($id <= 0) {
+         $this->session->set('promotions_update_error', 'ID promosi tidak valid.');
+         return $this->response->redirect('settings/promotions');
+      }
+
+      try {
+         $this->db->execute("DELETE FROM promotions WHERE id = :id", ['id' => $id]);
+         $this->session->set('promotions_update_success', 'Promosi berhasil dihapus.');
+      } catch (\Throwable $e) {
+         $this->session->set('promotions_update_error', 'Gagal menghapus promosi: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/promotions');
+   }
+
+   public function chunk_upload_promotionsAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Invalid request.'], 405);
+      }
+
+      $uploadId = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $this->request->getPost('upload_id'));
+      $chunkIndex = (int) $this->request->getPost('chunk_index');
+      $totalChunks = (int) $this->request->getPost('total_chunks');
+
+      if ($uploadId === '' || $totalChunks < 1 || $chunkIndex < 0 || $chunkIndex >= $totalChunks) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Parameter chunk tidak valid.']);
+      }
+
+      $fileInfo = $_FILES['chunk_data'] ?? null;
+      if (! is_array($fileInfo) || (int) ($fileInfo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Chunk file tidak diterima.']);
+      }
+
+      $tmpName = (string) $fileInfo['tmp_name'];
+      $chunkSize = (int) $fileInfo['size'];
+      if (! is_uploaded_file($tmpName) || $chunkSize <= 0) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Chunk tidak valid.']);
+      }
+
+      if ($chunkSize > (4 * 1024 * 1024)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Ukuran chunk melebihi 4MB.']);
+      }
+
+      $tempDir = sys_get_temp_dir() . '/promotions_chunks/' . $uploadId;
+      if (! is_dir($tempDir)) {
+         mkdir($tempDir, 0750, true);
+      }
+
+      $chunkPath = $tempDir . '/chunk_' . $chunkIndex;
+      if (! move_uploaded_file($tmpName, $chunkPath)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Gagal menyimpan chunk ke server.']);
+      }
+
+      $receivedCount = count(glob($tempDir . '/chunk_*'));
+      if ($receivedCount < $totalChunks) {
+         return $this->jsonResponse([
+            'success' => true,
+            'done' => false,
+            'received' => $receivedCount,
+            'total' => $totalChunks,
+            'message' => "Chunk {$chunkIndex} diterima.",
+         ]);
+      }
+
+      $metaFile = $tempDir . '/meta.json';
+      $meta = [];
+      if (file_exists($metaFile)) {
+         $meta = json_decode(file_get_contents($metaFile), true) ?: [];
+      }
+      $extension = strtolower((string) ($meta['extension'] ?? 'jpg'));
+      $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+      if (! in_array($extension, $allowedExtensions, true)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Ekstensi foto promosi tidak valid.']);
+      }
+
+      $targetDir = BASE_PATH . '/public/images/promotions';
+      if (! is_dir($targetDir)) {
+         mkdir($targetDir, 0755, true);
+      }
+
+      $fileName = 'promo_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+      $targetPath = $targetDir . '/' . $fileName;
+
+      $outHandle = fopen($targetPath, 'wb');
+      if (! $outHandle) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Gagal membuat file output.']);
+      }
+
+      for ($i = 0; $i < $totalChunks; $i++) {
+         $chunkFile = $tempDir . '/chunk_' . $i;
+         if (! file_exists($chunkFile)) {
+            fclose($outHandle);
+            return $this->jsonResponse(['success' => false, 'message' => "Chunk ke-{$i} hilang saat perakitan."]);
+         }
+         $chunkHandle = fopen($chunkFile, 'rb');
+         stream_copy_to_stream($chunkHandle, $outHandle);
+         fclose($chunkHandle);
+      }
+      fclose($outHandle);
+
+      foreach (glob($tempDir . '/*') as $f) {
+         @unlink($f);
+      }
+      @rmdir($tempDir);
+
+      return $this->jsonResponse([
+         'success' => true,
+         'done' => true,
+         'file_path' => 'images/promotions/' . $fileName,
+         'message' => 'Upload selesai.',
+      ]);
+   }
+
+   public function save_extension_promotionsAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->jsonResponse(['success' => false], 405);
+      }
+
+      $uploadId = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $this->request->getPost('upload_id'));
+      $extension = strtolower(preg_replace('/[^a-z0-9]/', '', (string) $this->request->getPost('extension')));
+      $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+      if ($uploadId === '' || ! in_array($extension, $allowedExtensions, true)) {
+         return $this->jsonResponse(['success' => false, 'message' => 'Parameter tidak valid.']);
+      }
+
+      $tempDir = sys_get_temp_dir() . '/promotions_chunks/' . $uploadId;
+      if (! is_dir($tempDir)) {
+         mkdir($tempDir, 0750, true);
+      }
+
+      file_put_contents($tempDir . '/meta.json', json_encode(['extension' => $extension]));
+
+      return $this->jsonResponse(['success' => true]);
+   }
 }

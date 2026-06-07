@@ -91,6 +91,11 @@ $router->addPost('/settings/update_galeri/([a-zA-Z0-9\-]+)', [
     'params'     => 1,
 ]);
 
+$router->add("/promo", [
+    "controller" => "promo",
+    "action"     => "index",
+]);
+
 $router->add("/mini-zoo", [
     "controller" => "minizoo", 
     "action"     => "index",
@@ -212,6 +217,11 @@ if (isset($_SESSION['id'])) {
 
     $router->add("/galeri",[
         "controller" => "Gallery", 
+        "action"     => "index",
+    ]);
+
+    $router->add("/promo",[
+        "controller" => "promo", 
         "action"     => "index",
     ]);
 
