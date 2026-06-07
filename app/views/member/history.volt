@@ -36,6 +36,9 @@
    </div>
 
    <div class="history-content">
+      {% if historyError %}
+      <div class="history-alert">{{ historyError }}</div>
+      {% endif %}
       <div class="history-table-card r">
          <div class="history-table-head">
             <h2 class="history-table-title">Riwayat Transaksi Point</h2>
@@ -62,19 +65,17 @@
                <thead>
                   <tr>
                      <th>Tgl Transaksi</th>
-                     <th>Kode Order</th>
                      <th class="text-right">Nominal</th>
                      <th class="text-center">Jenis</th>
                      <th class="text-right">Point</th>
                      <th>Kategori</th>
-                     <!-- <th>Dibuat Oleh</th> -->
+                     <th class="text-center">Aksi</th>
                   </tr>
                </thead>
                <tbody>
                   {% for t in transactions %}
                   <tr class="history-row">
                      <td>{{ Helpers.formatDateTime(t['tgl_transaksi'], 'd M Y H:i') }} WIB</td>
-                     <td><span class="history-kode">{{ t['kode_order'] }}</span></td>
                      <td class="text-right">{{ Helpers.number(t['nominal_transaksi']) }}</td>
                      <td class="text-center">
                         {% if t['jenis_poin'] == 'keluar' %}
@@ -87,7 +88,14 @@
                         {% if t['jenis_poin'] == 'keluar' %}-{% endif %}{{ Helpers.number(t['point']) }}
                      </td>
                      <td>{{ t['kategori'] ? t['kategori'] : '—' }}</td>
-                     <!-- <td class="history-created-by">{{ t['created_by'] ? t['created_by'] : '—' }}</td> -->
+                     <td class="text-center">
+                        {% if t['kode_order'] and t['kategori'] %}
+                        <a href="{{ url('member-order-detail/' ~ t['kategori']|upper ~ '/' ~ t['kode_order']) }}?page={{ currentPage }}"
+                           class="history-order-btn">Detail Order</a>
+                        {% else %}
+                        —
+                        {% endif %}
+                     </td>
                   </tr>
                   {% endfor %}
                </tbody>

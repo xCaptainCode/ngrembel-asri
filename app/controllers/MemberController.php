@@ -106,6 +106,64 @@ class MemberController extends Controller {
       $this->view->setVar('totalPages', $totalPages);
       $this->view->setVar('totalTransactions', $totalTransactions);
       $this->view->setVar('perPage', $perPage);
+      $this->view->setVar('historyError', $this->session->get('history_error'));
+      $this->session->remove('history_error');
+   }
+
+   public function order_detailAction() {
+      $jenis = strtoupper(trim((string) $this->dispatcher->getParam('jenis', 'string')));
+      $kodeOrder = trim((string) $this->dispatcher->getParam('kode_order', 'string'));
+      $memberId = (string) $this->session->get('id');
+      $historyPage = max(1, (int) $this->request->getQuery('page', 'int', 1));
+
+      if ($jenis === '' || $kodeOrder === '' || $memberId === '') {
+         return $this->response->redirect('member-history');
+      }
+
+      $owned = $this->db->fetchOne(
+         'SELECT id FROM poin_transaksi
+          WHERE member_id = :member_id
+            AND kode_order = :kode_order
+            AND UPPER(kategori) = :jenis
+          LIMIT 1',
+         \Phalcon\Db::FETCH_ASSOC,
+         [
+            'member_id' => $memberId,
+            'kode_order' => $kodeOrder,
+            'jenis' => $jenis,
+         ]
+      );
+
+      if (! $owned) {
+         $this->session->set('history_error', 'Anda tidak memiliki akses ke detail order tersebut.');
+         return $this->response->redirect('member-history');
+      }
+
+      $order = $this->db->fetchOne(
+         'SELECT * FROM orders WHERE kode_order = :kode_order AND jenis = :jenis LIMIT 1',
+         \Phalcon\Db::FETCH_ASSOC,
+         ['kode_order' => $kodeOrder, 'jenis' => $jenis]
+      );
+
+      $items = [];
+      if ($order) {
+         $items = $this->db->fetchAll(
+            'SELECT * FROM order_items
+             WHERE kode_order = :kode_order AND jenis = :jenis
+             ORDER BY item ASC',
+            \Phalcon\Db::FETCH_ASSOC,
+            ['kode_order' => $kodeOrder, 'jenis' => $jenis]
+         ) ?: [];
+      }
+
+      $this->view->pick('settings/order_detail');
+      $this->view->setVar('order', $order ?: null);
+      $this->view->setVar('items', $items);
+      $this->view->setVar('jenis', $jenis);
+      $this->view->setVar('kodeOrder', $kodeOrder);
+      $this->view->setVar('memberId', '');
+      $this->view->setVar('returnTo', 'history');
+      $this->view->setVar('historyPage', $historyPage);
    }
 
    public function updateFieldAction() {

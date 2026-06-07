@@ -111,6 +111,17 @@ class SettingsController extends Controller {
       $this->view->setVar('pointImportError', $this->session->get('point_import_error'));
       $this->session->remove('point_import_success');
       $this->session->remove('point_import_error');
+
+      $this->view->setVar('orderImportOrdersPreview', $this->session->get('order_import_orders_preview'));
+      $this->view->setVar('orderImportItemsPreview', $this->session->get('order_import_items_preview'));
+      $this->view->setVar('orderImportSummary', $this->session->get('order_import_summary'));
+      $this->view->setVar('orderImportToken', $this->session->get('order_import_token'));
+      $this->view->setVar('orderImportOrdersFileName', $this->session->get('order_import_orders_name'));
+      $this->view->setVar('orderImportItemsFileName', $this->session->get('order_import_items_name'));
+      $this->view->setVar('orderImportSuccess', $this->session->get('order_import_success'));
+      $this->view->setVar('orderImportError', $this->session->get('order_import_error'));
+      $this->session->remove('order_import_success');
+      $this->session->remove('order_import_error');
    }
 
    public function member_point_detailAction() {
@@ -174,6 +185,43 @@ class SettingsController extends Controller {
       $this->view->setVar('totalPages', $totalPages);
       $this->view->setVar('totalTransactions', $totalTransactions);
       $this->view->setVar('perPage', $perPage);
+   }
+
+   public function order_detailAction() {
+      $jenis = strtoupper(trim((string) $this->dispatcher->getParam('jenis', 'string')));
+      $kodeOrder = trim((string) $this->dispatcher->getParam('kode_order', 'string'));
+      $memberId = trim((string) $this->request->getQuery('member_id', 'string', ''));
+
+      if ($jenis === '' || $kodeOrder === '') {
+         return $this->response->redirect('settings/member');
+      }
+
+      $order = $this->db->fetchOne(
+         'SELECT * FROM orders WHERE kode_order = :kode_order AND jenis = :jenis LIMIT 1',
+         \Phalcon\Db::FETCH_ASSOC,
+         ['kode_order' => $kodeOrder, 'jenis' => $jenis]
+      );
+
+      $items = [];
+      if ($order) {
+         $items = $this->db->fetchAll(
+            'SELECT * FROM order_items
+             WHERE kode_order = :kode_order AND jenis = :jenis
+             ORDER BY item ASC',
+            \Phalcon\Db::FETCH_ASSOC,
+            ['kode_order' => $kodeOrder, 'jenis' => $jenis]
+         ) ?: [];
+      }
+
+      $returnTo = $memberId !== '' ? 'admin_point_detail' : 'admin_list';
+
+      $this->view->setVar('order', $order ?: null);
+      $this->view->setVar('items', $items);
+      $this->view->setVar('jenis', $jenis);
+      $this->view->setVar('kodeOrder', $kodeOrder);
+      $this->view->setVar('memberId', $memberId);
+      $this->view->setVar('returnTo', $returnTo);
+      $this->view->setVar('historyPage', 0);
    }
 
    public function download_member_csvAction() {
@@ -421,6 +469,168 @@ class SettingsController extends Controller {
          return $nama;
       }
       return $id !== '' ? $id : 'admin';
+   }
+
+   public function upload_order_historyAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/member');
+      }
+
+      $this->clearOrderImportSession(true);
+
+      $ordersUpload = $this->getUploadedFileByKey('orders_csv');
+      $itemsUpload = $this->getUploadedFileByKey('order_items_csv');
+
+      if (! $ordersUpload || ! $itemsUpload) {
+         $this->session->set('order_import_error', 'Wajib upload 2 file CSV: orders.csv dan order_items.csv.');
+         return $this->response->redirect('settings/member');
+      }
+
+      foreach ([$ordersUpload, $itemsUpload] as $upload) {
+         if ($upload->getError() !== UPLOAD_ERR_OK) {
+            $this->session->set('order_import_error', 'Upload file gagal. Periksa ukuran file (maks. 5MB per file).');
+            return $this->response->redirect('settings/member');
+         }
+
+         $size = (int) $upload->getSize();
+         if ($size <= 0 || $size > OrderHistoryCsvImport::MAX_FILE_BYTES) {
+            $this->session->set('order_import_error', 'Ukuran file melebihi batas 5MB atau file kosong.');
+            return $this->response->redirect('settings/member');
+         }
+
+         $extension = strtolower(pathinfo((string) $upload->getName(), PATHINFO_EXTENSION));
+         if ($extension !== 'csv') {
+            $this->session->set('order_import_error', 'Hanya file berformat .csv yang diperbolehkan.');
+            return $this->response->redirect('settings/member');
+         }
+      }
+
+      $token = bin2hex(random_bytes(16));
+      $ordersPath = OrderHistoryCsvImport::storageDir() . DIRECTORY_SEPARATOR . $token . '_orders.csv';
+      $itemsPath = OrderHistoryCsvImport::storageDir() . DIRECTORY_SEPARATOR . $token . '_items.csv';
+
+      if (! $ordersUpload->moveTo($ordersPath) || ! $itemsUpload->moveTo($itemsPath)) {
+         @unlink($ordersPath);
+         @unlink($itemsPath);
+         $this->session->set('order_import_error', 'Gagal menyimpan file sementara.');
+         return $this->response->redirect('settings/member');
+      }
+
+      try {
+         $importer = new OrderHistoryCsvImport($this->db);
+         $orderRows = $importer->parseOrdersFile($ordersPath);
+         $itemRows = $importer->parseOrderItemsFile($itemsPath);
+
+         $ordersSummary = $importer->buildSummary($orderRows);
+         $itemsSummary = $importer->buildSummary($itemRows);
+
+         $this->session->set('order_import_token', $token);
+         $this->session->set('order_import_orders_file', $ordersPath);
+         $this->session->set('order_import_items_file', $itemsPath);
+         $this->session->set('order_import_orders_name', (string) $ordersUpload->getName());
+         $this->session->set('order_import_items_name', (string) $itemsUpload->getName());
+         $this->session->set('order_import_orders_preview', $importer->buildPreviewRows($orderRows));
+         $this->session->set('order_import_items_preview', $importer->buildPreviewRows($itemRows));
+         $this->session->set('order_import_summary', [
+            'orders' => $ordersSummary,
+            'items' => $itemsSummary,
+         ]);
+      } catch (\Throwable $e) {
+         @unlink($ordersPath);
+         @unlink($itemsPath);
+         $this->session->set('order_import_error', 'Gagal memproses CSV: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/member#order-import-preview');
+   }
+
+   public function confirm_order_history_importAction() {
+      $this->view->disable();
+
+      if (! $this->request->isPost()) {
+         return $this->response->redirect('settings/member');
+      }
+
+      $token = trim((string) $this->request->getPost('import_token', 'string'));
+      $sessionToken = (string) $this->session->get('order_import_token');
+      $ordersPath = (string) $this->session->get('order_import_orders_file');
+      $itemsPath = (string) $this->session->get('order_import_items_file');
+      $ordersName = (string) $this->session->get('order_import_orders_name');
+      $itemsName = (string) $this->session->get('order_import_items_name');
+
+      if ($token === '' || $token !== $sessionToken || ! is_file($ordersPath) || ! is_file($itemsPath)) {
+         $this->clearOrderImportSession(true);
+         $this->session->set('order_import_error', 'Sesi impor tidak valid atau file sudah kedaluwarsa. Upload ulang CSV.');
+         return $this->response->redirect('settings/member');
+      }
+
+      try {
+         $importer = new OrderHistoryCsvImport($this->db);
+         $orderRows = $importer->parseOrdersFile($ordersPath);
+         $itemRows = $importer->parseOrderItemsFile($itemsPath);
+         $result = $importer->importAll(
+            $orderRows,
+            $itemRows,
+            $this->getPointImportActor(),
+            $ordersName !== '' ? $ordersName : basename($ordersPath),
+            $itemsName !== '' ? $itemsName : basename($itemsPath)
+         );
+
+         $this->clearOrderImportSession(true);
+
+         $this->session->set(
+            'order_import_success',
+            sprintf(
+               'Impor riwayat transaksi selesai. Orders: %d masuk, %d duplikat. Items: %d masuk, %d duplikat. Log audit tercatat.',
+               $result['orders_inserted'],
+               $result['orders_skipped_duplicate'],
+               $result['items_inserted'],
+               $result['items_skipped_duplicate']
+            )
+         );
+      } catch (\Throwable $e) {
+         $this->session->set('order_import_error', 'Gagal mengimpor data: ' . $e->getMessage());
+      }
+
+      return $this->response->redirect('settings/member');
+   }
+
+   public function cancel_order_history_importAction() {
+      $this->view->disable();
+      $this->clearOrderImportSession(true);
+      $this->session->set('order_import_error', 'Impor riwayat transaksi dibatalkan.');
+      return $this->response->redirect('settings/member');
+   }
+
+   private function getUploadedFileByKey($key) {
+      foreach ($this->request->getUploadedFiles() as $file) {
+         if ($file->getKey() === $key) {
+            return $file;
+         }
+      }
+      return null;
+   }
+
+   private function clearOrderImportSession($deleteFiles = false) {
+      if ($deleteFiles) {
+         foreach (['order_import_orders_file', 'order_import_items_file'] as $sessionKey) {
+            $path = (string) $this->session->get($sessionKey);
+            if ($path !== '' && is_file($path)) {
+               @unlink($path);
+            }
+         }
+      }
+
+      $this->session->remove('order_import_token');
+      $this->session->remove('order_import_orders_file');
+      $this->session->remove('order_import_items_file');
+      $this->session->remove('order_import_orders_name');
+      $this->session->remove('order_import_items_name');
+      $this->session->remove('order_import_orders_preview');
+      $this->session->remove('order_import_items_preview');
+      $this->session->remove('order_import_summary');
    }
 
    public function update_memberAction() {
