@@ -67,8 +67,9 @@ $di->setShared('view', function () {
             });
 
             $volt->getCompiler()->addFunction('http_build_query', 'http_build_query');
-
             $volt->getCompiler()->addFunction('sprintf', 'sprintf');
+            $volt->getCompiler()->addFunction('strtotime', 'strtotime');
+
 
             return $volt;
         },
